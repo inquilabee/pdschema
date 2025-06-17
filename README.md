@@ -1,4 +1,4 @@
-# PySchema
+# PdSchema
 
 A Python library for schema validation and type inference of pandas DataFrames using PyArrow types.
 
@@ -14,15 +14,15 @@ A Python library for schema validation and type inference of pandas DataFrames u
 ## Installation
 
 ```bash
-pip install pyschema
+pip install pdschema
 ```
 
 ## Quick Start
 
 ```python
 import pandas as pd
-from pyschema import Schema, Column
-from pyschema.validators import IsPositive, IsNonEmptyString, Range
+from pdschema import Schema, Column
+from pdschema.validators import IsPositive, IsNonEmptyString, Range
 
 # Define your schema
 schema = Schema([
@@ -44,10 +44,10 @@ schema.validate(df)  # Returns True if valid, raises ValueError if invalid
 
 ## Built-in Validators
 
-PySchema provides a rich set of built-in validators:
+pdschema provides a rich set of built-in validators:
 
 ```python
-from pyschema.validators import (
+from pdschema.validators import (
     IsPositive,
     IsNonEmptyString,
     Max,
@@ -68,7 +68,7 @@ Column("description", str, validators=[Length(min_length=10, max_length=500)])
 
 ## Type Support
 
-PySchema supports both Python types and pandas dtypes, mapping them to appropriate PyArrow types:
+pdschema supports both Python types and pandas dtypes, mapping them to appropriate PyArrow types:
 
 ### Python Types
 - `int` → `pa.int64()`
@@ -168,4 +168,4 @@ class Validator(ABC):
 
 ## License
 
-[Your chosen license]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

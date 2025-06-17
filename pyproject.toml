@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "pyschema"
+name = "pdschema"
 version = "0.1.0"
 description = "A Python project"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
-packages = [{include = "pyschema"}]
+packages = [{ include = "pyschema" }]
 
 [tool.poetry.dependencies]
 python = ">=3.13,<4.0"
