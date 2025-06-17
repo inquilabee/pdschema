@@ -1,7 +1,5 @@
-from collections.abc import Callable
-from typing import Any
-
-import pyarrow as pa
+from pyschema.types import pyarrow__python
+from pyschema.validators import Validator
 
 
 class Column:
@@ -10,7 +8,7 @@ class Column:
         name: str,
         dtype: type,
         nullable: bool = True,
-        validators: list[Callable[[Any], bool]] | None = None,
+        validators: list[Validator] | None = None,
     ):
         self.name = name
         self.dtype = dtype
@@ -18,14 +16,7 @@ class Column:
         self.validators = validators or []
 
     def to_pyarrow_type(self):
-        # Extendable map
-        type_map = {
-            int: pa.int64(),
-            float: pa.float64(),
-            str: pa.string(),
-            bool: pa.bool_(),
-        }
         try:
-            return type_map[self.dtype]
+            return pyarrow__python[self.dtype]
         except KeyError as e:
             raise TypeError(f"Unsupported dtype: {self.dtype}") from e
