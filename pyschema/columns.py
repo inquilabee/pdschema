@@ -1,4 +1,8 @@
-from pyschema.types import pyarrow__python
+import contextlib
+
+import pandas as pd
+
+from pyschema.types import TYPE_MAPPINGS, infer_pyarrow_type_from_series
 from pyschema.validators import Validator
 
 
@@ -16,7 +20,14 @@ class Column:
         self.validators = validators or []
 
     def to_pyarrow_type(self):
-        try:
-            return pyarrow__python[self.dtype]
-        except KeyError as e:
-            raise TypeError(f"Unsupported dtype: {self.dtype}") from e
+        for mapping in TYPE_MAPPINGS:
+            if self.dtype in mapping:
+                return mapping[self.dtype]
+
+        raise TypeError(f"Unsupported dtype: {self.dtype}")
+
+    def infer_pyarrow_type(self, values: pd.Series):
+        with contextlib.suppress(Exception):
+            return infer_pyarrow_type_from_series(values)
+
+        raise TypeError(f"Unsupported dtype: {self.dtype}")

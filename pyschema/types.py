@@ -31,23 +31,51 @@ pyarrow__pandas = {
     pd.Float32Dtype(): pa.float32(),
     pd.StringDtype(): pa.string(),
     pd.BooleanDtype(): pa.bool_(),
-    pd.DatetimeTZDtype(): pa.timestamp("us"),
+    pd.DatetimeTZDtype(tz="UTC"): pa.timestamp("us", tz="UTC"),
     pd.CategoricalDtype(): pa.dictionary(pa.int32(), pa.string()),
     pd.IntervalDtype(): pa.struct([("start", pa.float64()), ("end", pa.float64())]),
-    pd.PeriodDtype(): pa.int64(),
-    pd.SparseDtype(): pa.null(),
 }
 
+TYPE_MAPPINGS = [
+    pyarrow__pandas,
+    pyarrow__python,
+]
 
-def get_pyarrow_type_from_series(s: pd.Series) -> pa.DataType:
+
+def infer_pyarrow_type_from_series(s: pd.Series) -> pa.DataType:
     """Infer the PyArrow type from a pandas Series."""
-    if s.dtype in pyarrow__pandas:
-        return pyarrow__pandas[s.dtype]
+    result = pa.null()
+
+    # Mapping of pandas dtype names to PyArrow types
+    dtype_mapping = {
+        "int64": pa.int64(),
+        "int32": pa.int64(),
+        "int16": pa.int64(),
+        "int8": pa.int64(),
+        "float64": pa.float64(),
+        "float32": pa.float64(),
+        "string": pa.string(),
+        "bool": pa.bool_(),
+        "datetime64[ns]": pa.timestamp("us"),
+        "category": pa.dictionary(pa.int32(), pa.string()),
+    }
+
+    # Check pandas dtype name first
+    if hasattr(s.dtype, "name") and s.dtype.name in dtype_mapping:
+        result = dtype_mapping[s.dtype.name]
+    # Check pandas type categories
+    elif pd.api.types.is_integer_dtype(s.dtype):
+        result = pa.int64()
+    elif pd.api.types.is_float_dtype(s.dtype):
+        result = pa.float64()
+    elif pd.api.types.is_bool_dtype(s.dtype):
+        result = pa.bool_()
+    elif pd.api.types.is_string_dtype(s.dtype):
+        result = pa.string()
+    # Handle object dtype by checking the first non-null value
     elif s.dtype == "object":
-        # Try to infer the type from the first non-null value
         sample = s.dropna().iloc[0] if not s.empty else None
-        if sample is not None:
-            sample_type = type(sample)
-            if sample_type in pyarrow__python:
-                return pyarrow__python[sample_type]
-    return pa.null()
+        if sample is not None and type(sample) in pyarrow__python:
+            result = pyarrow__python[type(sample)]
+
+    return result
