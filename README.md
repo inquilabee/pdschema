@@ -1,171 +1,116 @@
-# PdSchema
+# pdschema
 
-A Python library for schema validation and type inference of pandas DataFrames using PyArrow types.
+A Python library for validating pandas DataFrames using schemas, with support for type checking, custom validators, and function input/output validation.
 
 ## Features
 
-- Schema validation for pandas DataFrames
-- Type inference from pandas Series to PyArrow types
-- Rich set of built-in validators
-- Support for both Python types and pandas dtypes
-- Nullability checks
-- Custom validator support
+- Define schemas for pandas DataFrames with type checking and validation
+- Support for custom validators (e.g., IsPositive, IsNonEmptyString, Range, etc.)
+- Function decorator for validating input and output DataFrames
+- PyArrow type integration for efficient type checking
+- Schema inference from existing DataFrames
+- Nullable column support
+- Comprehensive type mapping between Python, pandas, and PyArrow types
 
 ## Installation
 
+### Using pip
+
 ```bash
 pip install pdschema
+```
+
+### Using Poetry
+
+```bash
+poetry add pdschema
 ```
 
 ## Quick Start
 
 ```python
 import pandas as pd
-from pdschema import Schema, Column
-from pdschema.validators import IsPositive, IsNonEmptyString, Range
+from pdschema import Schema, Column, IsPositive, IsNonEmptyString
 
-# Define your schema
+# Define a schema
 schema = Schema([
-    Column("age", int, nullable=False, validators=[IsPositive(), Range(0, 120)]),
+    Column("id", int, nullable=False),
     Column("name", str, nullable=False, validators=[IsNonEmptyString()]),
-    Column("score", float, validators=[Range(0.0, 100.0)]),
+    Column("age", int, validators=[IsPositive()]),
+    Column("score", float, validators=[Range(0, 100)])
 ])
 
 # Create a DataFrame
 df = pd.DataFrame({
-    "age": [25, 30, 35],
+    "id": [1, 2, 3],
     "name": ["Alice", "Bob", "Charlie"],
-    "score": [95.5, 88.0, 91.2],
+    "age": [25, 30, 35],
+    "score": [85.5, 92.0, 78.5]
 })
 
 # Validate the DataFrame
-schema.validate(df)  # Returns True if valid, raises ValueError if invalid
+schema.validate(df)  # Raises ValueError if validation fails
 ```
 
-## Built-in Validators
+## Function Validation
 
-pdschema provides a rich set of built-in validators:
+Use the `@pdfunction` decorator to validate function inputs and outputs:
 
 ```python
-from pdschema.validators import (
-    IsPositive,
-    IsNonEmptyString,
-    Max,
-    Min,
-    Range,
-    GreaterThan,
-    LessThan,
-    Choice,
-    Length,
+from pdschema import pdfunction
+
+@pdfunction(
+    arguments={
+        "df": Schema([Column("id", int), Column("value", float)]),
+        "threshold": float
+    },
+    outputs={
+        "result": Schema([Column("id", int), Column("filtered_value", float)])
+    }
 )
-
-# Examples
-Column("age", int, validators=[IsPositive(), Max(120)])
-Column("score", float, validators=[Range(0.0, 100.0)])
-Column("status", str, validators=[Choice(["active", "inactive", "pending"])])
-Column("description", str, validators=[Length(min_length=10, max_length=500)])
+def filter_values(df, threshold):
+    result = df[df["value"] > threshold]
+    return {"result": result}
 ```
 
-## Type Support
+## Available Validators
 
-pdschema supports both Python types and pandas dtypes, mapping them to appropriate PyArrow types:
+- `IsPositive`: Ensures numeric values are positive
+- `IsNonEmptyString`: Ensures strings are non-empty
+- `Max`: Ensures values are less than or equal to a maximum
+- `Min`: Ensures values are greater than or equal to a minimum
+- `GreaterThan`: Ensures values are greater than a threshold
+- `GreaterThanOrEqual`: Ensures values are greater than or equal to a threshold
+- `LessThan`: Ensures values are less than a threshold
+- `LessThanOrEqual`: Ensures values are less than or equal to a threshold
+- `Choice`: Ensures values are in a list of allowed choices
+- `Length`: Ensures values have a specific length or length range
+- `Range`: Ensures values are within a range
 
-### Python Types
-- `int` → `pa.int64()`
-- `float` → `pa.float64()`
-- `str` → `pa.string()`
-- `bool` → `pa.bool_()`
-- `datetime` → `pa.timestamp("us")`
-- `date` → `pa.date32()`
-- `time` → `pa.time64("us")`
-- `Decimal` → `pa.decimal128(38, 18)`
+## Schema Inference
 
-### Pandas Dtypes
-- `Int64Dtype` → `pa.int64()`
-- `Float64Dtype` → `pa.float64()`
-- `StringDtype` → `pa.string()`
-- `BooleanDtype` → `pa.bool_()`
-- `DatetimeTZDtype` → `pa.timestamp("us")`
-- `CategoricalDtype` → `pa.dictionary(pa.int32(), pa.string())`
-
-## API Reference
-
-### Schema
+You can infer a schema from an existing DataFrame:
 
 ```python
-class Schema:
-    def __init__(self, columns: list[Column]):
-        """Initialize a schema with a list of columns."""
-        pass
+df = pd.DataFrame({
+    "id": [1, 2, 3],
+    "name": ["Alice", "Bob", "Charlie"],
+    "age": [25, 30, 35]
+})
 
-    def validate(self, df: pd.DataFrame) -> bool:
-        """Validate a DataFrame against the schema.
-
-        Returns:
-            bool: True if valid
-
-        Raises:
-            ValueError: If validation fails, with detailed error messages
-        """
-        pass
+schema = Schema.infer_schema(df)
 ```
 
-### Column
+## Contributing
 
-```python
-class Column:
-    def __init__(
-        self,
-        name: str,
-        dtype: type,
-        nullable: bool = True,
-        validators: list[Validator] | None = None,
-    ):
-        """Initialize a column definition.
-
-        Args:
-            name: Column name
-            dtype: Python type or pandas dtype
-            nullable: Whether the column can contain null values
-            validators: List of validators to apply
-        """
-        pass
-```
-
-### Validators
-
-All validators inherit from the `Validator` abstract base class and implement the `validate` method:
-
-```python
-class Validator(ABC):
-    @abstractmethod
-    def validate(self, value) -> bool:
-        """Return True if value is valid, else False."""
-        pass
-```
-
-## Development
-
-1. Install Poetry (if not already installed):
-   ```bash
-   curl -sSL https://install.python-poetry.org | python3 -
-   ```
-
-2. Install dependencies:
-   ```bash
-   poetry install
-   ```
-
-3. Install pre-commit hooks:
-   ```bash
-   poetry run pre-commit install
-   ```
-
-4. Run tests:
-   ```bash
-   poetry run pytest
-   ```
+1. Fork the repository
+2. Create a new branch for your feature
+3. Install development dependencies: `poetry install --with dev`
+4. Make your changes
+5. Run tests: `poetry run pytest`
+6. Run linting: `poetry run ruff check . && poetry run ruff format .`
+7. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.

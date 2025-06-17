@@ -1,8 +1,8 @@
 import pandas as pd
 
-from pyschema.columns import Column
-from pyschema.schema import Schema
-from pyschema.validators import IsNonEmptyString, IsPositive
+from pdschema.columns import Column
+from pdschema.schema import Schema
+from pdschema.validators import IsNonEmptyString, IsPositive
 
 df = pd.DataFrame(
     {

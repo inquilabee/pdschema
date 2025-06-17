@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 import pyarrow as pa
 
-from pyschema.columns import Column
+from pdschema.columns import Column
 
 
 class Schema:
