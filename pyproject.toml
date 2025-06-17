@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "pyschema"
+version = "0.1.0"
+description = "A Python project"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "pyschema"}]
+
+[tool.poetry.dependencies]
+python = ">=3.13,<4.0"
+pyarrow = "^20.0.0"
+pandas = "^2.3.0"
+
+[tool.poetry.group.dev.dependencies]
+black = ">=24.2.0"
+isort = ">=5.13.2"
+ruff = ">=0.2.2"
+pre-commit = "^3.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+select = ["E", "F", "B", "I", "N", "UP", "PL", "RUF"]
+ignore = []
+
+[tool.ruff.isort]
+known-first-party = ["pyschema"]
