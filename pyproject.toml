@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pdschema"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python library for validating pandas DataFrames using schemas"
 authors = ["pdschema contributors"]
 readme = "README.md"
@@ -10,15 +10,15 @@ repository = "https://github.com/inquilabee/pdschema"
 documentation = "https://github.com/inquilabee/pdschema#readme"
 keywords = ["pandas", "schema", "validation", "dataframe", "pyarrow"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [tool.poetry.dependencies]
