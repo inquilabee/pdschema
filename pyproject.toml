@@ -39,17 +39,17 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ["py38"]
 include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-line_length = 88
+line_length = 120
 
 [tool.ruff]
-line-length = 88
+line-length = 120
 target-version = "py38"
 
 [tool.ruff.lint]

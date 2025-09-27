@@ -40,25 +40,28 @@ def pdfunction(
 
     def decorator(func: Callable) -> Callable:
         @wraps(func)
+        def _validate_schema_or_type(
+            name: str,
+            value: Any,
+            schema_or_type: Schema | type,
+            is_output: bool = False,
+        ):
+            kind = "Output" if is_output else "Argument"
+            if isinstance(schema_or_type, Schema):
+                if not isinstance(value, pd.DataFrame):
+                    raise TypeError(f"{kind} '{name}' must be a pandas DataFrame")
+                schema_or_type.validate(value)
+            elif isinstance(schema_or_type, type):
+                if not isinstance(value, schema_or_type):
+                    raise TypeError(f"{kind} '{name}' must be of type {schema_or_type}")
+            else:
+                raise TypeError(f"{kind} schema for '{name}' must be a Schema or type")
+
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Validate input arguments
-            for arg_name, arg_value in kwargs.items():
-                if arg_name in arguments:
-                    schema_or_type = arguments[arg_name]
-                    if isinstance(schema_or_type, Schema):
-                        if not isinstance(arg_value, pd.DataFrame):
-                            raise TypeError(
-                                f"Argument '{arg_name}' must be a pandas DataFrame"
-                            )
-                        schema_or_type.validate(arg_value)
-                    elif isinstance(arg_value, pd.DataFrame):
-                        raise TypeError(
-                            f"Argument '{arg_name}' must be of type {schema_or_type}"
-                        )
-                    elif not isinstance(arg_value, schema_or_type):
-                        raise TypeError(
-                            f"Argument '{arg_name}' must be of type {schema_or_type}"
-                        )
+            for arg_name, schema_or_type in arguments.items():
+                if arg_name in kwargs:
+                    _validate_schema_or_type(arg_name, kwargs[arg_name], schema_or_type, is_output=False)
 
             # Call the function
             result = func(*args, **kwargs)
@@ -68,11 +71,7 @@ def pdfunction(
                 for output_name, output_schema in outputs.items():
                     if output_name not in result:
                         raise ValueError(f"Missing output: {output_name}")
-                    if not isinstance(result[output_name], pd.DataFrame):
-                        raise TypeError(
-                            f"Output '{output_name}' must be a pandas DataFrame"
-                        )
-                    output_schema.validate(result[output_name])
+                    _validate_schema_or_type(output_name, result[output_name], output_schema, is_output=True)
 
             return result
 

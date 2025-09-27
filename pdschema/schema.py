@@ -20,16 +20,12 @@ class Schema:
         for col in self.columns.values():
             nullable_str = "nullable=True" if col.nullable else "nullable=False"
             validators_str = f", validators={col.validators}" if col.validators else ""
-            lines.append(
-                f"    Column(name='{col.name}', dtype={col.dtype.__name__}, {nullable_str}{validators_str})"  # noqa: E501
-            )
+            lines.append(f"    Column(name='{col.name}', dtype={col.dtype.__name__}, {nullable_str}{validators_str})")
         lines.append(")")
         return "\n".join(lines)
 
     def _check_missing_column(self, col_name: str, df: pd.DataFrame) -> str | None:
-        if col_name not in df.columns:
-            return f"Missing column: {col_name}"
-        return None
+        return f"Missing column: {col_name}" if col_name not in df.columns else None
 
     def _check_nullability(self, col: Column, series: pd.Series) -> str | None:
         if not col.nullable and series.isnull().any():
@@ -51,9 +47,7 @@ class Schema:
             for validator in col.validators:
                 try:
                     if not validator(val):
-                        errors.append(
-                            f"Validation failed in '{col.name}' at index {i}: {val}"
-                        )
+                        errors.append(f"Validation failed in '{col.name}' at index {i}: {val}")
                         break
                 except Exception as e:
                     errors.append(f"Validator error in '{col.name}' at index {i}: {e}")
@@ -63,19 +57,16 @@ class Schema:
         errors = []
 
         for col_name, col in self.columns.items():
-            missing = self._check_missing_column(col_name, df)
-            if missing:
+            if missing := self._check_missing_column(col_name, df):
                 errors.append(missing)
                 continue
 
             series = df[col_name]
 
-            nullability = self._check_nullability(col, series)
-            if nullability:
+            if nullability := self._check_nullability(col, series):
                 errors.append(nullability)
 
-            type_error = self._check_type(col, series)
-            if type_error:
+            if type_error := self._check_type(col, series):
                 errors.append(type_error)
 
             errors.extend(self._check_validators(col, series))
@@ -84,6 +75,30 @@ class Schema:
             raise ValueError("Schema validation failed:\n" + "\n".join(errors))
 
         return True
+
+    @staticmethod
+    def _infer_column_type(series: pd.Series) -> type:
+        """Infer the Python type for a pandas Series."""
+        if series.empty:
+            return object
+
+        type_checks = [
+            (pd.api.types.is_integer_dtype, int),
+            (pd.api.types.is_float_dtype, float),
+            (pd.api.types.is_bool_dtype, bool),
+            (pd.api.types.is_string_dtype, str),
+            (pd.api.types.is_datetime64_dtype, datetime),
+            (lambda dtype: hasattr(dtype, "categories"), str),
+            (lambda series: series.apply(lambda x: isinstance(x, dict)).any(), dict),
+        ]
+
+        for check, inferred_type in type_checks:
+            if callable(check) and check(series):
+                return inferred_type
+
+        # For unknown types, try to infer from the first non-null value
+        sample = None if series.empty else series.dropna().iloc[0]
+        return type(sample) if sample is not None else object
 
     @staticmethod
     def infer_schema(df: pd.DataFrame) -> "Schema":
@@ -98,36 +113,12 @@ class Schema:
         Returns:
             Schema: A new Schema instance with inferred column definitions
         """
-        columns = []
-        for col_name in df.columns:
-            series = df[col_name]
-            # Infer nullability
-            nullable = series.isnull().any()
-
-            # Convert pandas dtype to Python type
-            if pd.api.types.is_integer_dtype(series.dtype):
-                dtype = int
-            elif pd.api.types.is_float_dtype(series.dtype):
-                dtype = float
-            elif pd.api.types.is_bool_dtype(series.dtype):
-                dtype = bool
-            elif pd.api.types.is_string_dtype(series.dtype):
-                dtype = str
-            elif pd.api.types.is_datetime64_dtype(series.dtype):
-                dtype = datetime
-            elif hasattr(series.dtype, "categories"):  # Check for categorical data
-                dtype = str  # Categorical data is treated as strings
-            else:
-                # For unknown types, try to infer from the first non-null value
-                sample = series.dropna().iloc[0] if not series.empty else None
-                dtype = type(sample) if sample is not None else object
-
-            # Create column definition
-            column = Column(
+        columns = [
+            Column(
                 name=col_name,
-                dtype=dtype,
-                nullable=nullable,
+                dtype=Schema._infer_column_type(df[col_name]),
+                nullable=bool(df[col_name].isnull().any()),
             )
-            columns.append(column)
-
+            for col_name in df.columns
+        ]
         return Schema(columns)

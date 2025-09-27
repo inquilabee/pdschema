@@ -114,7 +114,7 @@ def _infer_object_series_type(s: pd.Series) -> pa.DataType:
         return pa.null()
 
     # Check if all non-null values are of the same type
-    value_types = set(type(x) for x in non_null_values)
+    value_types = {type(x) for x in non_null_values}
     if len(value_types) > 1:
         raise TypeError("Cannot infer type from mixed-type object Series")
 

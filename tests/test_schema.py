@@ -56,9 +56,7 @@ def test_schema_validation():
             "score": [85.5, 92.0, 78.5],
         }
     )
-    with pytest.raises(
-        ValueError, match="Null values found in non-nullable column: id"
-    ):
+    with pytest.raises(ValueError, match="Null values found in non-nullable column: id"):
         schema.validate(df_null)
 
     # Invalid DataFrame - validation failure
@@ -179,3 +177,37 @@ def test_schema_repr():
     assert "IsNonEmptyString" in actual_repr
     assert "Column(name='age'" in actual_repr
     assert "IsPositive" in actual_repr
+
+
+def test_infer_column_type():
+    # Test integer type
+    s_int = pd.Series([1, 2, 3])
+    assert Schema._infer_column_type(s_int) is int
+
+    # Test float type
+    s_float = pd.Series([1.1, 2.2, 3.3])
+    assert Schema._infer_column_type(s_float) is float
+
+    # Test boolean type
+    s_bool = pd.Series([True, False, True])
+    assert Schema._infer_column_type(s_bool) is bool
+
+    # Test string type
+    s_str = pd.Series(["a", "b", "c"])
+    assert Schema._infer_column_type(s_str) is str
+
+    # Test datetime type
+    s_datetime = pd.Series(pd.date_range("2023-01-01", periods=3))
+    assert Schema._infer_column_type(s_datetime) is datetime
+
+    # Test categorical type
+    s_categorical = pd.Series(["a", "b", "c"], dtype="category")
+    assert Schema._infer_column_type(s_categorical) is str
+
+    # Test unknown type with sample inference
+    s_object = pd.Series([{"key": "value"}, {"key": "value2"}])
+    assert Schema._infer_column_type(s_object) is dict
+
+    # Test empty series
+    s_empty = pd.Series([], dtype=object)
+    assert Schema._infer_column_type(s_empty) is object
