@@ -47,10 +47,12 @@ def pdfunction(
             is_output: bool = False,
         ):
             kind = "Output" if is_output else "Argument"
-            if isinstance(schema_or_type, Schema):
+            if isinstance(schema_or_type, Schema) or issubclass(schema_or_type, Schema):
                 if not isinstance(value, pd.DataFrame):
                     raise TypeError(f"{kind} '{name}' must be a pandas DataFrame")
-                schema_or_type.validate(value)
+                # If schema_or_type is a class, instantiate it
+                schema_instance = schema_or_type() if isinstance(schema_or_type, type) else schema_or_type
+                schema_instance.validate(value)
             elif isinstance(schema_or_type, type):
                 if not isinstance(value, schema_or_type):
                     raise TypeError(f"{kind} '{name}' must be of type {schema_or_type}")
