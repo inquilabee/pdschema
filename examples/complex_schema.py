@@ -57,12 +57,8 @@ def complex_schema_example():
             "age": [25, 30, 35],
             "address": [
                 json.dumps({"street": "123 Main St", "city": "Boston", "zip": "02108"}),
-                json.dumps(
-                    {"street": "456 Oak Ave", "city": "New York", "zip": "10001"}
-                ),
-                json.dumps(
-                    {"street": "789 Pine Rd", "city": "Chicago", "zip": "60601"}
-                ),
+                json.dumps({"street": "456 Oak Ave", "city": "New York", "zip": "10001"}),
+                json.dumps({"street": "789 Pine Rd", "city": "Chicago", "zip": "60601"}),
             ],
             "scores": [
                 json.dumps({"math": 95, "science": 88, "english": 92}),

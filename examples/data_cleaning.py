@@ -70,11 +70,7 @@ def clean_and_validate_data():
 
     # Clean the data
     df["name"] = df["name"].str.strip().str.replace(r"\s+", " ", regex=True)
-    df["phone"] = (
-        df["phone"]
-        .str.replace(r"[^\d]", "", regex=True)
-        .apply(lambda x: f"({x[:3]}) {x[3:6]}-{x[6:]}")
-    )
+    df["phone"] = df["phone"].str.replace(r"[^\d]", "", regex=True).apply(lambda x: f"({x[:3]}) {x[3:6]}-{x[6:]}")
     df["age"] = pd.to_numeric(df["age"].str.strip(), errors="coerce")
     df["email"] = df["email"].str.strip()
 
@@ -109,12 +105,8 @@ def transform_and_validate_data():
     )
 
     # Transform the data
-    df["price"] = (
-        df["raw_price"].str.replace("$", "").str.replace(",", "").astype(float)
-    )
-    df["date"] = pd.to_datetime(df["raw_date"], format="%m/%d/%Y").dt.strftime(
-        "%Y-%m-%d"
-    )
+    df["price"] = df["raw_price"].str.replace("$", "").str.replace(",", "").astype(float)
+    df["date"] = pd.to_datetime(df["raw_date"], format="%m/%d/%Y").dt.strftime("%Y-%m-%d")
     df["quantity"] = df["raw_quantity"].str.replace(",", "").astype(int)
 
     # Define a schema for transformed data

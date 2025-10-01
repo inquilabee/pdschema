@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar, Optional
 
 import pandas as pd
 import pyarrow as pa
@@ -6,9 +7,33 @@ import pyarrow as pa
 from pdschema.columns import Column
 
 
-class Schema:
-    def __init__(self, columns: list[Column]):
-        self.columns = {col.name: col for col in columns}
+class SchemaMeta(type):
+    """Metaclass for Schema to collect declared Column fields."""
+
+    def __new__(cls, name, bases, dct):
+        # Collect Column instances declared in the class body
+        columns = {key: value for key, value in dct.items() if isinstance(value, Column)}
+        # Remove the Column instances from the class dictionary
+        for key in columns:
+            dct.pop(key)
+        # Add the collected columns as a class attribute
+        dct["_declared_columns"] = columns
+        return super().__new__(cls, name, bases, dct)
+
+
+class Schema(metaclass=SchemaMeta):
+    _declared_columns: ClassVar[dict[str, Column]] = {}
+
+    def __init__(self, columns: Optional[list[Column]] = None):
+        if not columns and not self._declared_columns:
+            # Default to an empty schema if no columns are provided
+            self.columns = {}
+        elif columns:
+            self.columns = {col.name: col for col in columns}
+        else:
+            self.columns = {
+                col_name: col_obj.with_name(col_name) for col_name, col_obj in self._declared_columns.items()
+            }
 
     def __repr__(self) -> str:
         """Return a string representation of the Schema.
@@ -20,7 +45,8 @@ class Schema:
         for col in self.columns.values():
             nullable_str = "nullable=True" if col.nullable else "nullable=False"
             validators_str = f", validators={col.validators}" if col.validators else ""
-            lines.append(f"    Column(name='{col.name}', dtype={col.dtype.__name__}, {nullable_str}{validators_str})")
+            dtype_str = col.dtype.__name__ if isinstance(col.dtype, type) else col.dtype
+            lines.append(f"    Column(name='{col.name}', dtype={dtype_str}, {nullable_str}{validators_str})")
         lines.append(")")
         return "\n".join(lines)
 
@@ -57,6 +83,9 @@ class Schema:
         errors = []
 
         for col_name, col in self.columns.items():
+            if not col_name:
+                raise ValueError("Column name cannot be None")
+
             if missing := self._check_missing_column(col_name, df):
                 errors.append(missing)
                 continue

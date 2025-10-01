@@ -72,9 +72,7 @@ def custom_error_handling():
         }
     )
 
-    schema = Schema(
-        [Column("status", str, nullable=False), Column("priority", str, nullable=False)]
-    )
+    schema = Schema([Column("status", str, nullable=False), Column("priority", str, nullable=False)])
 
     try:
         schema.validate(df)

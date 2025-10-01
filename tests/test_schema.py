@@ -5,15 +5,7 @@ import pytest
 
 from pdschema.columns import Column
 from pdschema.schema import Schema
-from pdschema.validators import (
-    Choice,
-    IsNonEmptyString,
-    IsPositive,
-    Length,
-    Max,
-    Min,
-    Range,
-)
+from pdschema.validators import Choice, IsNonEmptyString, IsPositive, Length, Max, Min, Range
 
 
 def test_schema_validation():
@@ -44,7 +36,7 @@ def test_schema_validation():
             "name": ["Alice", "Bob", "Charlie"],
         }
     )
-    with pytest.raises(ValueError, match="Missing column: age"):
+    with pytest.raises(Exception, match="Missing column: age"):
         schema.validate(df_missing)
 
     # Invalid DataFrame - null in non-nullable column

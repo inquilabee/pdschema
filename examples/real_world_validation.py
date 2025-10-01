@@ -117,9 +117,7 @@ def ecommerce_data_validation():
                 nullable=False,
                 validators=[IsValidCurrency(min_amount=0.01)],
             ),
-            Column(
-                "customer_email", str, nullable=False, validators=[IsNonEmptyString()]
-            ),
+            Column("customer_email", str, nullable=False, validators=[IsNonEmptyString()]),
         ]
     )
 
@@ -155,9 +153,7 @@ def inventory_data_validation():
             Column("category", str, nullable=False),
             Column("stock_level", int, nullable=False, validators=[IsPositive()]),
             Column("reorder_point", int, nullable=False, validators=[IsPositive()]),
-            Column(
-                "last_restock_date", str, nullable=False, validators=[IsValidDate()]
-            ),
+            Column("last_restock_date", str, nullable=False, validators=[IsValidDate()]),
         ]
     )
 

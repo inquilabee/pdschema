@@ -19,9 +19,7 @@ class IsValidEmail(Validator):
     def __init__(self):
         super().__init__()
         # RFC 5322 compliant email regex
-        self.email_pattern = re.compile(
-            r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        )
+        self.email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
     def validate(self, value: Any) -> bool:
         if not isinstance(value, str):
