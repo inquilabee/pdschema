@@ -19,7 +19,7 @@ from pdschema.validators import IsNonEmptyString, IsPositive, Range
         "users": Schema(
             [
                 Column("id", int, nullable=False),
-                Column("name", str, nullable=False, validators=[IsNonEmptyString()]),
+                Column("name", str, nullable=False, validators=[IsNonEmptyString]),
                 Column("age", int, validators=[IsPositive(), Range(0, 120)]),
             ]
         ),

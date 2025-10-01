@@ -14,12 +14,12 @@ def test_column_initialization():
     assert col.validators == []
 
     # Test with validators
-    col = Column("age", int, nullable=False, validators=[IsPositive()])
+    col = Column("age", int, nullable=False, validators=[IsPositive])
     assert col.name == "age"
     assert col.dtype == int
     assert col.nullable is False
     assert len(col.validators) == 1
-    assert isinstance(col.validators[0], IsPositive)
+    assert isinstance(col.validators[0], IsPositive) or issubclass(col.validators[0], IsPositive)
 
 
 def test_column_to_pyarrow_type():

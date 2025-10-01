@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import ClassVar, Optional
 
 import pandas as pd
-import pyarrow as pa
 
 from pdschema.columns import Column
 
@@ -50,35 +49,6 @@ class Schema(metaclass=SchemaMeta):
         lines.append(")")
         return "\n".join(lines)
 
-    def _check_missing_column(self, col_name: str, df: pd.DataFrame) -> str | None:
-        return f"Missing column: {col_name}" if col_name not in df.columns else None
-
-    def _check_nullability(self, col: Column, series: pd.Series) -> str | None:
-        if not col.nullable and series.isnull().any():
-            return f"Null values found in non-nullable column: {col.name}"
-        return None
-
-    def _check_type(self, col: Column, series: pd.Series) -> str | None:
-        try:
-            pa.array(series.dropna(), type=col.to_pyarrow_type())
-        except (pa.ArrowInvalid, pa.ArrowTypeError) as e:
-            return f"Type mismatch in column '{col.name}': {e}"
-        return None
-
-    def _check_validators(self, col: Column, series: pd.Series) -> list[str]:
-        errors = []
-        for i, val in series.items():
-            if pd.isnull(val):
-                continue
-            for validator in col.validators:
-                try:
-                    if not validator(val):
-                        errors.append(f"Validation failed in '{col.name}' at index {i}: {val}")
-                        break
-                except Exception as e:
-                    errors.append(f"Validator error in '{col.name}' at index {i}: {e}")
-        return errors
-
     def validate(self, df: pd.DataFrame) -> bool:
         errors = []
 
@@ -86,19 +56,22 @@ class Schema(metaclass=SchemaMeta):
             if not col_name:
                 raise ValueError("Column name cannot be None")
 
-            if missing := self._check_missing_column(col_name, df):
+            # Call the check_missing method of the Column class
+            if missing := col.check_missing(df):
                 errors.append(missing)
                 continue
 
             series = df[col_name]
 
-            if nullability := self._check_nullability(col, series):
+            # Call the check_nullability method of the Column class
+            if nullability := col.check_nullability(series):
                 errors.append(nullability)
 
-            if type_error := self._check_type(col, series):
+            # Call the check_type method of the Column class
+            if type_error := col.check_type(series):
                 errors.append(type_error)
 
-            errors.extend(self._check_validators(col, series))
+            errors.extend(col.validate(series))
 
         if errors:
             raise ValueError("Schema validation failed:\n" + "\n".join(errors))

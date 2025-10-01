@@ -30,26 +30,40 @@ poetry add pdschema
 
 ```python
 import pandas as pd
-from pdschema import Schema, Column, IsPositive, IsNonEmptyString
 
-# Define a schema
-schema = Schema([
-    Column("id", int, nullable=False),
-    Column("name", str, nullable=False, validators=[IsNonEmptyString()]),
-    Column("age", int, validators=[IsPositive()]),
-    Column("score", float, validators=[Range(0, 100)])
-])
+from pdschema import Column, IsNonEmptyString, IsPositive, Range, Schema
 
 # Create a DataFrame
-df = pd.DataFrame({
-    "id": [1, 2, 3],
-    "name": ["Alice", "Bob", "Charlie"],
-    "age": [25, 30, 35],
-    "score": [85.5, 92.0, 78.5]
-})
+df = pd.DataFrame(
+    {
+        "idx": [1, 2, 3],
+        "name": ["Alice", "Bob", "Charlie"],
+        "age": [25, 30, 35],
+        "score": [85.5, 92.0, 78.5],
+    }
+)
 
-# Validate the DataFrame
-schema.validate(df)  # Raises ValueError if validation fails
+# Define a schema using programmatic syntax
+schema = Schema(
+    [
+        Column("idx", int, nullable=False),
+        Column("name", str, nullable=False, validators=[IsNonEmptyString()]),
+        Column("age", int, validators=[IsPositive()]),
+        Column("score", float, validators=[Range(0, 100)]),
+    ]
+)
+
+# Validate the DataFrame: raises ValueError if validation fails
+schema.validate(df)
+
+# Declarative Schema Definition
+class MySchema(Schema):
+    idx = Column(dtype=int, nullable=False)
+    name = Column(dtype=str, nullable=False, validators=[IsNonEmptyString])
+    age = Column(dtype=int, nullable=False, validators=[IsPositive])
+    score = Column(dtype=float, nullable=False, validators=[Range(0, 100)])
+
+MySchema().validate(df)
 ```
 
 ## Function Validation
@@ -74,6 +88,8 @@ def filter_values(df, threshold):
 ```
 
 ## Available Validators
+
+The package comes builtin with many Validators you can use.
 
 - `IsPositive`: Ensures numeric values are positive
 - `IsNonEmptyString`: Ensures strings are non-empty
@@ -100,16 +116,6 @@ df = pd.DataFrame({
 
 schema = Schema.infer_schema(df)
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a new branch for your feature
-3. Install development dependencies: `poetry install --with dev`
-4. Make your changes
-5. Run tests: `poetry run pytest`
-6. Run linting: `poetry run ruff check . && poetry run ruff format .`
-7. Submit a pull request
 
 ## License
 
