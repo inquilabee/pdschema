@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from copy import deepcopy
-from typing import Callable
 
 import pandas as pd
 import pyarrow as pa
@@ -64,11 +64,9 @@ class Column:
 
             for validator in self.validators:
                 try:
-                    # Check if the validator is callable and apply it directly
-                    if not isinstance(validator, Validator):
-                        validator_instance = validator()
-                    else:
-                        validator_instance = validator
+                    validator_instance = (
+                        validator() if not isinstance(validator, Validator) else validator
+                    )
 
                     if not validator_instance.validate(val):
                         errors.append(f"Validation failed in '{self.name}' at index {i}: {val}")

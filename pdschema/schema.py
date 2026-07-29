@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import pandas as pd
 
@@ -23,7 +23,7 @@ class SchemaMeta(type):
 class Schema(metaclass=SchemaMeta):
     _declared_columns: ClassVar[dict[str, Column]] = {}
 
-    def __init__(self, columns: Optional[list[Column]] = None):
+    def __init__(self, columns: list[Column] | None = None):
         if not columns and not self._declared_columns:
             # Default to an empty schema if no columns are provided
             self.columns = {}
