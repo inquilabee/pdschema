@@ -5,7 +5,7 @@ from typing import ParamSpec, TypeVar, cast
 
 import pandas as pd
 
-from pdschema.errors import FunctionSchemaError, SchemaValidationError
+from pdschema.errors import FunctionSchemaError
 from pdschema.schema import Schema
 
 P = ParamSpec("P")
@@ -60,11 +60,13 @@ def pdfunction(
 
             result = func(*args, **kwargs)
 
-            if isinstance(result, dict):
+            if outputs:
+                if not isinstance(result, dict):
+                    raise FunctionSchemaError("Declared outputs require a dict return value")
                 payload = cast(dict[str, object], result)
                 for output_name, output_schema in outputs.items():
                     if output_name not in payload:
-                        raise SchemaValidationError(f"Missing output: {output_name}")
+                        raise FunctionSchemaError(f"Missing output: {output_name}")
                     _validate_schema_or_type(output_name, payload[output_name], output_schema, is_output=True)
 
             return result

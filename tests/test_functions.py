@@ -88,7 +88,7 @@ def test_pdfunction_missing_output():
         return {}  # Missing output
 
     df = pd.DataFrame({"value": [1, 2, 3]})
-    with pytest.raises(ValueError, match="Missing output: result"):
+    with pytest.raises(TypeError, match="Missing output: result"):
         process_data(df=df)
 
 
@@ -118,3 +118,16 @@ def test_pdfunction_no_validation():
     result = no_validation(df=df)
     assert isinstance(result["result"], pd.DataFrame)
     assert list(result["result"]["value"]) == [1, 2, 3]
+
+
+def test_pdfunction_requires_dict_when_outputs_declared():
+    @pdfunction(
+        arguments={"df": Schema([Column("value", int)])},
+        outputs={"result": Schema([Column("value", int)])},
+    )
+    def process_data(df):
+        return df
+
+    df = pd.DataFrame({"value": [1, 2, 3]})
+    with pytest.raises(TypeError, match="Declared outputs require a dict return value"):
+        process_data(df=df)
