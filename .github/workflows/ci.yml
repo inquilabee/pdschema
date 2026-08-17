@@ -22,8 +22,7 @@ jobs:
       - name: Create project environment
         run: |
           uv venv .venv --python 3.13
-          uv pip install --python .venv .
-          uv pip install --python .venv pytest pytest-cov
+          uv pip install --python .venv ".[dev]"
       - name: Quality gates
         run: |
           uvx --python 3.13 shipgate check \
