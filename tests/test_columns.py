@@ -64,3 +64,14 @@ def test_check_type_rejects_coercible_strings():
     error = col.check_type(pd.Series(["1", "2", "3"]))
     assert error is not None
     assert "expected" in error
+
+
+def test_check_type_accepts_int32_for_python_int():
+    col = Column("age", int)
+    assert col.check_type(pd.Series([1, 2, 3], dtype="int32")) is None
+
+
+def test_column_string_pandas_dtype_name():
+    col = Column("age", "int64")
+    assert str(col.to_pyarrow_type()) == "int64"
+    assert col.check_type(pd.Series([1, 2, 3], dtype="int64")) is None

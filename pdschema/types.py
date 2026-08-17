@@ -112,6 +112,16 @@ class TypeRegistry:
 
         return cls.infer_object_type(non_null_values.iloc[0])
 
+    @classmethod
+    def types_compatible(cls, expected: pa.DataType, inferred: pa.DataType, declared: object) -> bool:
+        if str(expected) == str(inferred):
+            return True
+        if declared is int:
+            return pa.types.is_signed_integer(inferred)
+        if declared is float:
+            return pa.types.is_floating(inferred)
+        return False
+
 
 def infer_pyarrow_type_from_series(s: pd.Series) -> pa.DataType:
     """Infer PyArrow type from a pandas Series."""

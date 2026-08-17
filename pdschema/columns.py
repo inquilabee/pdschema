@@ -5,8 +5,8 @@ from typing import Self
 import pandas as pd
 import pyarrow as pa
 
-from pdschema.errors import TypeCheckError
-from pdschema.types import TYPE_MAPPINGS, infer_pyarrow_type_from_series
+from pdschema.errors import PdSchemaError, TypeCheckError
+from pdschema.types import TYPE_MAPPINGS, TypeRegistry, infer_pyarrow_type_from_series
 from pdschema.validators import CallableValidator, Validator
 
 UNSUPPORTED_DTYPE = "Unsupported dtype"
@@ -50,6 +50,8 @@ class Column:
         return clone
 
     def to_pyarrow_type(self) -> pa.DataType:
+        if isinstance(self.dtype, str) and self.dtype in TypeRegistry.PANDAS_TO_PA:
+            return TypeRegistry.PANDAS_TO_PA[self.dtype]
         for mapping in TYPE_MAPPINGS:
             if self.dtype in mapping:
                 return mapping[self.dtype]
@@ -61,7 +63,10 @@ class Column:
             expected_type = self.to_pyarrow_type()
         except TypeError as err:
             raise TypeCheckError(f"Unsupported dtype for column {self.name!r}: series={values.dtype} ({err})") from err
-        if inferred == pa.null() or str(inferred) != str(expected_type):
+        if inferred == pa.null() or (
+            str(inferred) != str(expected_type)
+            and not TypeRegistry.types_compatible(expected_type, inferred, self.dtype)
+        ):
             raise TypeCheckError(
                 f"Unsupported dtype for column {self.name!r}: series={values.dtype}, "
                 f"expected {expected_type}, inferred {inferred}"
@@ -86,7 +91,7 @@ class Column:
                 try:
                     if not validator.validate(val):
                         errors.append(f"Validation failed in '{self.name}' at index {i}: {val} ({validator})")
-                except Exception as exc:
+                except (TypeError, ValueError, PdSchemaError) as exc:
                     errors.append(f"Validator error in '{self.name}' at index {i}: {exc}")
         return errors
 
@@ -131,6 +136,8 @@ class Column:
             inferred = infer_pyarrow_type_from_series(non_null)
         except TypeError as err:
             return f"Type mismatch in column '{self.name}': {err}"
-        if str(inferred) != str(expected_type):
+        if str(inferred) != str(expected_type) and not TypeRegistry.types_compatible(
+            expected_type, inferred, self.dtype
+        ):
             return f"Type mismatch in column '{self.name}': expected {expected_type}, got {inferred}"
         return None
