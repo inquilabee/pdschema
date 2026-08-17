@@ -1,3 +1,5 @@
+from importlib.metadata import PackageNotFoundError, version
+
 from pdschema.columns import Column
 from pdschema.errors import FunctionSchemaError, PdSchemaError, SchemaValidationError, TypeCheckError
 from pdschema.functions import pdfunction
@@ -18,6 +20,11 @@ from pdschema.validators import (
     Validator,
 )
 
+try:
+    __version__ = version("pdschema")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
+
 __all__ = [
     "Choice",
     "Column",
@@ -37,6 +44,7 @@ __all__ = [
     "SchemaValidationError",
     "TypeCheckError",
     "Validator",
+    "__version__",
     "infer_pyarrow_type_from_series",
     "pdfunction",
 ]

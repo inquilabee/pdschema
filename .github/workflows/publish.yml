@@ -1,0 +1,53 @@
+name: Publish
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+rc[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+[ab][0-9]+"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.13
+      - run: uvx --python 3.13 shipgate install --suite full
+      - name: Create project environment
+        run: |
+          uv venv .venv --python 3.13
+          uv pip install --python .venv ".[dev]"
+      - run: make check
+      - run: make test
+      - run: uv build --no-sources
+      - name: Smoke wheel
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          uv run --isolated --no-project --with dist/*.whl python -c "
+          import pdschema
+          assert pdschema.__version__ == '''${TAG}''', pdschema.__version__
+          "
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pdschema
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - run: uv publish --trusted-publishing always
