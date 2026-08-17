@@ -60,6 +60,12 @@
   font-size: 1rem;
 }
 
+.pd-card strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+}
+
 .pd-card p {
   margin: 0;
   font-size: 0.85rem;
