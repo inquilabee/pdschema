@@ -1,0 +1,61 @@
+site_name: pdschema
+site_url: https://inquilabee.github.io/pdschema/
+site_description: Validate pandas DataFrames against column contracts. Types, nullability, and per-cell checks.
+repo_url: https://github.com/inquilabee/pdschema
+repo_name: inquilabee/pdschema
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - toc.follow
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+  - tables
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Quickstart: user/quickstart.md
+  - Validators: user/validators.md
+  - Functions: user/functions.md
+
+exclude_docs: |
+  product/
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/inquilabee/pdschema
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/pdschema/
