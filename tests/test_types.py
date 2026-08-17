@@ -44,9 +44,8 @@ def test_infer_pyarrow_type_from_series(capsys=None):
     s_str = pd.Series(["a", "b", "c"])
     assert str(infer_pyarrow_type_from_series(s_str)) == "string"
 
-    # Test boolean types
-    s_bool = pd.Series([True, False, True])
-    assert str(infer_pyarrow_type_from_series(s_bool)) == "bool"
+    s_object_bool = pd.Series([True, False, True], dtype=object)
+    assert str(infer_pyarrow_type_from_series(s_object_bool)) == "bool"
 
     # Test datetime types
     s_dt = pd.Series(pd.date_range("2024-01-01", periods=3))

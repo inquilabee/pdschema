@@ -37,17 +37,20 @@ class Column:
 
         raise TypeError(f"{UNSUPPORTED_DTYPE}: {self.dtype}")
 
-    def infer_pyarrow_type(self, values: pd.Series):
+    def infer_pyarrow_type(self, values: pd.Series) -> pa.DataType:
         try:
             inferred = infer_pyarrow_type_from_series(values)
-            if inferred == pa.null():
-                raise TypeError(UNSUPPORTED_DTYPE)
             expected_type = self.to_pyarrow_type()
-            if str(inferred) != str(expected_type):
-                raise TypeError(UNSUPPORTED_DTYPE)
-            return inferred
-        except Exception as err:
-            raise TypeError(UNSUPPORTED_DTYPE) from err
+        except TypeError as err:
+            raise TypeError(
+                f"Unsupported dtype for column {self.name!r}: series={values.dtype} ({err})"
+            ) from err
+        if inferred == pa.null() or str(inferred) != str(expected_type):
+            raise TypeError(
+                f"Unsupported dtype for column {self.name!r}: series={values.dtype}, "
+                f"expected {expected_type}, inferred {inferred}"
+            )
+        return inferred
 
     def validate(self, values: pd.Series) -> list[str]:
         """Validate a pandas Series against this column's constraints.

@@ -11,18 +11,6 @@ import pyarrow as pa
 class TypeRegistry:
     """Internal type mapping registry."""
 
-    PYARROW_PYTHON: ClassVar[dict[type[object], pa.DataType]] = {
-        int: pa.int64(),
-        float: pa.float64(),
-        str: pa.string(),
-        bool: pa.bool_(),
-        datetime: pa.timestamp("us"),
-        date: pa.date32(),
-        time: pa.time64("us"),
-        Decimal: pa.decimal128(38, 18),
-        list: pa.list_(pa.null()),
-    }
-
     PYARROW_PANDAS: ClassVar[dict[object, pa.DataType]] = {
         pd.Int64Dtype(): pa.int64(),
         pd.Int32Dtype(): pa.int32(),
@@ -65,16 +53,16 @@ class TypeRegistry:
         "bool": pa.bool_(),
         "boolean": pa.bool_(),
         "string": pa.string(),
-        "object": pa.string(),  # fallback for object, but handled above
         "datetime64[ns]": pa.timestamp("us"),
         "timedelta64[ns]": pa.duration("us"),
         "category": pa.dictionary(pa.int32(), pa.string()),
     }
 
     PYTHON_TO_PA: ClassVar[dict[type[object], pa.DataType]] = {
+        bool: pa.bool_(),
+        np.bool_: pa.bool_(),
         int: pa.int64(),
         float: pa.float64(),
-        bool: pa.bool_(),
         str: pa.string(),
         datetime: pa.timestamp("us"),
         date: pa.date32(),
@@ -83,7 +71,6 @@ class TypeRegistry:
         list: pa.list_(pa.null()),
         np.integer: pa.int64(),
         np.floating: pa.float64(),
-        np.bool_: pa.bool_(),
         np.str_: pa.string(),
         np.datetime64: pa.timestamp("us"),
         np.timedelta64: pa.duration("us"),
@@ -92,13 +79,13 @@ class TypeRegistry:
 
     TYPE_MAPPINGS: ClassVar[list[Mapping[object, pa.DataType]]] = [
         PYARROW_PANDAS,
-        cast(Mapping[object, pa.DataType], PYARROW_PYTHON),
+        cast(Mapping[object, pa.DataType], PYTHON_TO_PA),
     ]
 
     PANDAS_TYPE_PREDICATES: ClassVar[list[tuple[Callable[[object], bool], pa.DataType]]] = [
+        (pd.api.types.is_bool_dtype, pa.bool_()),
         (pd.api.types.is_integer_dtype, pa.int64()),
         (pd.api.types.is_float_dtype, pa.float64()),
-        (pd.api.types.is_bool_dtype, pa.bool_()),
         (pd.api.types.is_datetime64_any_dtype, pa.timestamp("us")),
         (pd.api.types.is_timedelta64_dtype, pa.duration("us")),
         (pd.api.types.is_string_dtype, pa.string()),
@@ -119,12 +106,10 @@ class TypeRegistry:
         if non_null_values.empty:
             return pa.null()
 
-        # Check if all non-null values are of the same type
         value_types = {type(x) for x in non_null_values}
         if len(value_types) > 1:
             raise TypeError("Cannot infer type from mixed-type object Series")
 
-        # Use the type of the first non-null value
         return cls.infer_object_type(non_null_values.iloc[0])
 
 
