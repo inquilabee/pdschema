@@ -205,3 +205,6 @@ $RECYCLE.BIN/
 .vscode/
 .powerhouse/
 .agents/
+
+# MkDocs build output
+site/
