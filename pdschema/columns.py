@@ -111,8 +111,17 @@ class Column:
         Returns:
             An error message if the data type does not match, otherwise None.
         """
+        non_null = series.dropna()
+        if non_null.empty:
+            return None
         try:
-            pa.array(series.dropna(), type=self.to_pyarrow_type())
-        except (pa.ArrowInvalid, pa.ArrowTypeError) as e:
-            return f"Type mismatch in column '{self.name}': {e}"
+            expected_type = self.to_pyarrow_type()
+            inferred = infer_pyarrow_type_from_series(non_null)
+        except TypeError as err:
+            return f"Type mismatch in column '{self.name}': {err}"
+        if str(inferred) != str(expected_type):
+            return (
+                f"Type mismatch in column '{self.name}': "
+                f"expected {expected_type}, got {inferred}"
+            )
         return None

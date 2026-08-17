@@ -57,3 +57,10 @@ def test_column_infer_pyarrow_type():
     series = pd.Series(["a", "b", "c"])
     with pytest.raises(TypeError, match="Unsupported dtype"):
         col.infer_pyarrow_type(series)
+
+
+def test_check_type_rejects_coercible_strings():
+    col = Column("age", int)
+    error = col.check_type(pd.Series(["1", "2", "3"]))
+    assert error is not None
+    assert "expected" in error
