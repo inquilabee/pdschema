@@ -4,6 +4,7 @@ from typing import ClassVar
 import pandas as pd
 
 from pdschema.columns import Column
+from pdschema.errors import SchemaValidationError
 
 
 class SchemaMeta(type):
@@ -57,7 +58,7 @@ class Schema(metaclass=SchemaMeta):
 
         for col_name, col in self.columns.items():
             if not col_name:
-                raise ValueError("Column name cannot be None")
+                raise SchemaValidationError("Column name cannot be None")
 
             if missing := col.check_missing(df):
                 errors.append(missing)
@@ -74,7 +75,7 @@ class Schema(metaclass=SchemaMeta):
             errors.extend(col.validate(series))
 
         if errors:
-            raise ValueError("Schema validation failed:\n" + "\n".join(errors))
+            raise SchemaValidationError("Schema validation failed:\n" + "\n".join(errors))
 
         return True
 

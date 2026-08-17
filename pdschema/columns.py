@@ -5,6 +5,7 @@ from typing import Self
 import pandas as pd
 import pyarrow as pa
 
+from pdschema.errors import TypeCheckError
 from pdschema.types import TYPE_MAPPINGS, infer_pyarrow_type_from_series
 from pdschema.validators import CallableValidator, Validator
 
@@ -50,18 +51,18 @@ class Column:
         for mapping in TYPE_MAPPINGS:
             if self.dtype in mapping:
                 return mapping[self.dtype]
-        raise TypeError(f"{UNSUPPORTED_DTYPE}: {self.dtype}")
+        raise TypeCheckError(f"{UNSUPPORTED_DTYPE}: {self.dtype}")
 
     def infer_pyarrow_type(self, values: pd.Series) -> pa.DataType:
         try:
             inferred = infer_pyarrow_type_from_series(values)
             expected_type = self.to_pyarrow_type()
         except TypeError as err:
-            raise TypeError(
+            raise TypeCheckError(
                 f"Unsupported dtype for column {self.name!r}: series={values.dtype} ({err})"
             ) from err
         if inferred == pa.null() or str(inferred) != str(expected_type):
-            raise TypeError(
+            raise TypeCheckError(
                 f"Unsupported dtype for column {self.name!r}: series={values.dtype}, "
                 f"expected {expected_type}, inferred {inferred}"
             )
