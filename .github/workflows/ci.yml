@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Install Python
+        run: uv python install 3.13
+      - name: Install ShipGate tools
+        run: uvx shipgate install --suite full
+      - name: Quality gates
+        run: uvx shipgate check --target . --full-tree --error-format github
+      - name: Structural refactor rules
+        run: uvx shipgate refactor check .
+      - name: Tests
+        run: uv run --with pytest --with pandas --with pyarrow pytest tests

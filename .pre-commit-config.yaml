@@ -1,29 +1,18 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+  - repo: local
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.2
-    hooks:
-      # Run the linter.
-      - id: ruff-check
-        args: [--fix]
-      # Run the formatter.
-      - id: ruff-format
-
-  - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
-    hooks:
-      - id: isort
-        args: ["--profile", "black"]
-
-  - repo: https://github.com/psf/black
-    rev: 25.9.0
-    hooks:
-      - id: black
-        language_version: python3
+      - id: shipgate-format
+        name: shipgate format
+        entry: uvx shipgate format --target . --full-tree
+        language: system
+        pass_filenames: false
+      - id: shipgate-check
+        name: shipgate check
+        entry: uvx shipgate check --target . --full-tree
+        language: system
+        pass_filenames: false
+      - id: shipgate-refactor
+        name: shipgate refactor
+        entry: uvx shipgate refactor check .
+        language: system
+        pass_filenames: false
