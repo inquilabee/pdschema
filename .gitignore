@@ -112,5 +112,5 @@ build/
 .shipgate/reports/
 .shipgate/server/
 .shipgate/worktrees/
-.shipgate/*.lock
+.shipgate/lock.json
 uv.lock
