@@ -24,7 +24,7 @@ classifiers = [
 
 [project.urls]
 Repository = "https://github.com/inquilabee/pdschema"
-Documentation = "https://github.com/inquilabee/pdschema#readme"
+Documentation = "https://github.com/inquilabee/pdschema/blob/main/docs/user/quickstart.md"
 
 [project.optional-dependencies]
 dev = [

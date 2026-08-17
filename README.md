@@ -1,39 +1,18 @@
 # pdschema
 
-A Python library for validating pandas DataFrames using schemas, with support for type checking, custom validators, and function input/output validation.
+Validate pandas DataFrames against column contracts. Types, nullability, and per-cell checks. No cleaning or transforms.
 
-## Features
-
-- Define schemas for pandas DataFrames with type checking and validation
-- Support for custom validators (e.g., IsPositive, IsNonEmptyString, Range, etc.)
-- Function decorator for validating input and output DataFrames
-- PyArrow type integration for efficient type checking
-- Schema inference from existing DataFrames
-- Nullable column support
-- Comprehensive type mapping between Python, pandas, and PyArrow types
-
-## Installation
-
-### Using pip
+Python 3.12+.
 
 ```bash
 pip install pdschema
 ```
-
-### Using Poetry
-
-```bash
-poetry add pdschema
-```
-
-## Quick Start
 
 ```python
 import pandas as pd
 
 from pdschema import Column, IsNonEmptyString, IsPositive, Range, Schema
 
-# Create a DataFrame
 df = pd.DataFrame(
     {
         "idx": [1, 2, 3],
@@ -43,7 +22,6 @@ df = pd.DataFrame(
     }
 )
 
-# Define a schema using programmatic syntax
 schema = Schema(
     [
         Column("idx", int, nullable=False),
@@ -53,70 +31,9 @@ schema = Schema(
     ]
 )
 
-# Validate the DataFrame: raises ValueError if validation fails
 schema.validate(df)
-
-# Declarative Schema Definition
-class MySchema(Schema):
-    idx = Column(dtype=int, nullable=False)
-    name = Column(dtype=str, nullable=False, validators=[IsNonEmptyString])
-    age = Column(dtype=int, nullable=False, validators=[IsPositive])
-    score = Column(dtype=float, nullable=False, validators=[Range(0, 100)])
-
-MySchema().validate(df)
 ```
 
-## Function Validation
+Full walkthrough, `@pdfunction`, and validators: [docs/user/quickstart.md](docs/user/quickstart.md).
 
-Use the `@pdfunction` decorator to validate function inputs and outputs. Every name in `arguments` is checked for both positional and keyword calls. Declared `outputs` must be returned as a dict of DataFrames (or other declared types).
-
-```python
-from pdschema import pdfunction
-
-@pdfunction(
-    arguments={
-        "df": Schema([Column("id", int), Column("value", float)]),
-        "threshold": float
-    },
-    outputs={
-        "result": Schema([Column("id", int), Column("filtered_value", float)])
-    }
-)
-def filter_values(df, threshold):
-    result = df[df["value"] > threshold]
-    return {"result": result}
-```
-
-## Available Validators
-
-The package comes builtin with many Validators you can use.
-
-- `IsPositive`: Ensures numeric values are positive
-- `IsNonEmptyString`: Ensures strings are non-empty
-- `Max`: Ensures values are less than or equal to a maximum
-- `Min`: Ensures values are greater than or equal to a minimum
-- `GreaterThan`: Ensures values are greater than a threshold
-- `GreaterThanOrEqual`: Ensures values are greater than or equal to a threshold
-- `LessThan`: Ensures values are less than a threshold
-- `LessThanOrEqual`: Ensures values are less than or equal to a threshold
-- `Choice`: Ensures values are in a list of allowed choices
-- `Length`: Ensures values have a specific length or length range
-- `Range`: Ensures values are within a range
-
-## Schema Inference
-
-You can infer a schema from an existing DataFrame:
-
-```python
-df = pd.DataFrame({
-    "id": [1, 2, 3],
-    "name": ["Alice", "Bob", "Charlie"],
-    "age": [25, 30, 35]
-})
-
-schema = Schema.infer_schema(df)
-```
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT. See LICENSE.
