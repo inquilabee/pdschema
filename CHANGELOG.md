@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.3.0
+
+- Vectorized validation for built-in validators (`IsPositive`, `Range`, `Choice`, `Min`, `Max`, `GreaterThan`, `LessThan`, `IsNonEmptyString`, `Length`). Custom validators and callables still run scalar. Mixed columns run vectorized first, then scalar on remaining rows.
+
 ## v0.2.1
 
 - GitHub Pages user guide with MkDocs Material and custom styling.

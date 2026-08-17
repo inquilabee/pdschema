@@ -51,6 +51,12 @@ schema = Schema([Column("name", str, validators=[IsCleanString(), lambda v: v.is
 
 `Length` needs at least one of `min_length` or `max_length`.
 
+## Performance
+
+All built-in validators run vectorized — operations like `series > 0` or `series.isin(choices)` execute in C over the whole column at once. Custom validators and callables fall back to a scalar Python loop, which is slower on large frames.
+
+When a column mixes built-in and custom validators, the vectorized checks run first and narrow the set of rows the scalar validators need to check.
+
 ## What you should see
 
 A failing cell looks like this:

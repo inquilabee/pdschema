@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 
+import pandas as pd
+
 
 def compare(op: str, left: object, right: object) -> bool:
     reflected = {"__lt__": "__gt__", "__le__": "__ge__", "__gt__": "__lt__", "__ge__": "__le__"}
@@ -21,6 +23,9 @@ class Validator(ABC):
     @abstractmethod
     def validate(self, value: object) -> bool:
         pass
+
+    def validate_vector(self, series: pd.Series) -> pd.Series | None:
+        return None
 
     def __call__(self, value: object) -> bool:
         return self.validate(value)
@@ -44,10 +49,16 @@ class IsPositive(Validator):
     def validate(self, value: object) -> bool:
         return compare("__gt__", value, 0)
 
+    def validate_vector(self, series: pd.Series) -> pd.Series:
+        return series > 0
+
 
 class IsNonEmptyString(Validator):
     def validate(self, value: object) -> bool:
         return isinstance(value, str) and len(value.strip()) > 0
+
+    def validate_vector(self, series: pd.Series) -> pd.Series:
+        return series.astype(str).str.strip().str.len() > 0
 
 
 class BoundComparison(Validator):
@@ -62,6 +73,11 @@ class BoundComparison(Validator):
         else:
             op = "__gt__" if self.exclusive else "__ge__"
         return compare(op, value, self.threshold)
+
+    def validate_vector(self, series: pd.Series) -> pd.Series:
+        if self.upper:
+            return series < self.threshold if self.exclusive else series <= self.threshold
+        return series > self.threshold if self.exclusive else series >= self.threshold
 
     def __str__(self) -> str:
         op = ("<" if self.exclusive else "<=") if self.upper else (">" if self.exclusive else ">=")
@@ -107,6 +123,9 @@ class Choice(Validator):
     def validate(self, value: object) -> bool:
         return value in self.choices
 
+    def validate_vector(self, series: pd.Series) -> pd.Series:
+        return series.isin(self.choices)
+
 
 class Length(Validator):
     def __init__(self, min_length: int | None = None, max_length: int | None = None):
@@ -125,6 +144,15 @@ class Length(Validator):
             return False
         return True
 
+    def validate_vector(self, series: pd.Series) -> pd.Series:
+        lengths = series.str.len()
+        mask = pd.Series(True, index=series.index)
+        if self.min_length is not None:
+            mask &= lengths >= self.min_length
+        if self.max_length is not None:
+            mask &= lengths <= self.max_length
+        return mask
+
 
 class Range(Validator):
     def __init__(self, min_value: object, max_value: object):
@@ -135,3 +163,6 @@ class Range(Validator):
 
     def validate(self, value: object) -> bool:
         return self._lower.validate(value) and self._upper.validate(value)
+
+    def validate_vector(self, series: pd.Series) -> pd.Series:
+        return self._lower.validate_vector(series) & self._upper.validate_vector(series)

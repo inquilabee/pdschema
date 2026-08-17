@@ -77,6 +77,8 @@ Catch `SchemaValidationError` if you want that type. Catch `ValueError` if you a
 
 A string that looks numeric is still a string. `"1"` does not pass `Column("id", int)`. `True` is not an `int` on `@pdfunction` arguments.
 
+Built-in validators (`IsPositive`, `Range`, `Choice`, etc.) run vectorized over the whole column in C. Custom validators and callables fall back to a scalar Python loop. See [Validators](validators.md) for details.
+
 ## Next
 
 - [Check function inputs and outputs](functions.md)

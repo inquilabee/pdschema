@@ -10,6 +10,7 @@ from pdschema.types import TYPE_MAPPINGS, TypeRegistry, infer_pyarrow_type_from_
 from pdschema.validators import CallableValidator, Validator
 
 UNSUPPORTED_DTYPE = "Unsupported dtype"
+AT_INDEX = " at index "
 
 
 class Column:
@@ -80,27 +81,79 @@ class Column:
             )
         return inferred
 
+    def _fmt_error(self, i: object, val: object, v: Validator) -> str:
+        return f"Validation failed in '{self.name}'{AT_INDEX}{i}: {val} ({v})"
+
     def validate(self, values: pd.Series) -> list[str]:
         """Validate a pandas Series against this column's constraints.
 
-        Args:
-            values: The pandas Series to validate.
-
-        Returns:
-            A list of validation error messages, if any.
+        Uses vectorized operations for built-in validators when possible,
+        falling back to scalar iteration for custom validators.
         """
-        errors = []
-        for i, val in values.items():
-            if pd.isnull(val):
-                continue
+        non_null = values.dropna()
+        if non_null.empty:
+            return []
 
-            for validator in self.validators:
-                try:
-                    if not validator.validate(val):
-                        errors.append(f"Validation failed in '{self.name}' at index {i}: {val} ({validator})")
-                except (TypeError, ValueError, PdSchemaError) as exc:
-                    errors.append(f"Validator error in '{self.name}' at index {i}: {exc}")
+        vec_vals, scalar_vals = self._split_validators(non_null)
+        errors: list[str] = []
+
+        if vec_vals:
+            scalar_check_indices = self._validate_vectorized(non_null, vec_vals, errors)
+        else:
+            scalar_check_indices = non_null.index
+
+        if scalar_vals and self.name is not None:
+            self._validate_scalar(self.name, non_null, scalar_check_indices, scalar_vals, errors)
+
         return errors
+
+    def _split_validators(self, series: pd.Series) -> tuple[list[Validator], list[Validator]]:
+        vec: list[Validator] = []
+        scalar: list[Validator] = []
+        for v in self.validators:
+            if v.validate_vector(series) is not None:
+                vec.append(v)
+            else:
+                scalar.append(v)
+        return vec, scalar
+
+    def _validate_vectorized(
+        self,
+        non_null: pd.Series,
+        vec_vals: list[Validator],
+        errors: list[str],
+    ) -> pd.Index:
+        combined = pd.Series(True, index=non_null.index)
+        vec_masks: list[tuple[Validator, pd.Series]] = []
+        for v in vec_vals:
+            mask = v.validate_vector(non_null)
+            if mask is not None:
+                vec_masks.append((v, mask))
+                combined &= mask
+        vec_failing = combined[~combined].index
+        for i in vec_failing:
+            val = non_null.at[i]
+            for v, mask in vec_masks:
+                if not mask.at[i]:
+                    errors.append(self._fmt_error(i, val, v))
+        return combined[combined].index
+
+    @staticmethod
+    def _validate_scalar(
+        col_name: str,
+        non_null: pd.Series,
+        indices: pd.Index,
+        scalar_vals: list[Validator],
+        errors: list[str],
+    ) -> None:
+        for i in indices:
+            val = non_null.at[i]
+            for v in scalar_vals:
+                try:
+                    if not v.validate(val):
+                        errors.append(f"Validation failed in '{col_name}'{AT_INDEX}{i}: {val} ({v})")
+                except (TypeError, ValueError, PdSchemaError) as exc:
+                    errors.append(f"Validator error in '{col_name}'{AT_INDEX}{i}: {exc}")
 
     def check_missing(self, df: pd.DataFrame) -> str | None:
         """Check if the column is missing in the DataFrame.
