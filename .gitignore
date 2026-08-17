@@ -101,3 +101,6 @@ build/
 .env
 .env.local
 .env.*.local
+
+# Powerhouse audit and planning
+.powerhouse/
