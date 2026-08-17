@@ -36,9 +36,7 @@ def test_pdfunction_basic():
         multiply_values(df=df_invalid, multiplier=2)
 
     # Invalid input - wrong type
-    with pytest.raises(
-        TypeError, match="Argument 'multiplier' must be of type <class 'int'>"
-    ):
+    with pytest.raises(TypeError, match="Argument 'multiplier' must be of type <class 'int'>"):
         multiply_values(df=df, multiplier="2")
 
 

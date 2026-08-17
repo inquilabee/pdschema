@@ -84,6 +84,8 @@ $RECYCLE.BIN/
 
 # Virtual Environment
 venv/
+.venv/
+.venv-*/
 ENV/
 
 # IDE
@@ -110,3 +112,5 @@ build/
 .shipgate/reports/
 .shipgate/server/
 .shipgate/worktrees/
+.shipgate/*.lock
+uv.lock

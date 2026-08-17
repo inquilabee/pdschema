@@ -3,16 +3,16 @@ repos:
     hooks:
       - id: shipgate-format
         name: shipgate format
-        entry: uvx shipgate format --target . --full-tree
+        entry: uvx --python 3.13 shipgate format --target . --full-tree --project-env .venv
         language: system
         pass_filenames: false
       - id: shipgate-check
         name: shipgate check
-        entry: uvx shipgate check --target . --full-tree
+        entry: uvx --python 3.13 shipgate check --target . --full-tree --project-env .venv
         language: system
         pass_filenames: false
       - id: shipgate-refactor
         name: shipgate refactor
-        entry: uvx shipgate refactor check .
+        entry: uvx --python 3.13 shipgate refactor check .
         language: system
         pass_filenames: false

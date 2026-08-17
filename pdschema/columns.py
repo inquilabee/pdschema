@@ -1,11 +1,13 @@
+from collections.abc import Callable
 from copy import deepcopy
-from typing import Callable
 
 import pandas as pd
 import pyarrow as pa
 
 from pdschema.types import TYPE_MAPPINGS, infer_pyarrow_type_from_series
 from pdschema.validators import Validator
+
+UNSUPPORTED_DTYPE = "Unsupported dtype"
 
 
 class Column:
@@ -33,20 +35,19 @@ class Column:
             if self.dtype in mapping:
                 return mapping[self.dtype]
 
-        raise TypeError(f"Unsupported dtype: {self.dtype}")
+        raise TypeError(f"{UNSUPPORTED_DTYPE}: {self.dtype}")
 
     def infer_pyarrow_type(self, values: pd.Series):
         try:
             inferred = infer_pyarrow_type_from_series(values)
             if inferred == pa.null():
-                raise TypeError("Unsupported dtype")
-            # Check if the inferred type matches the column's expected type
+                raise TypeError(UNSUPPORTED_DTYPE)
             expected_type = self.to_pyarrow_type()
             if str(inferred) != str(expected_type):
-                raise TypeError("Unsupported dtype")
+                raise TypeError(UNSUPPORTED_DTYPE)
             return inferred
         except Exception as err:
-            raise TypeError("Unsupported dtype") from err
+            raise TypeError(UNSUPPORTED_DTYPE) from err
 
     def validate(self, values: pd.Series) -> list[str]:
         """Validate a pandas Series against this column's constraints.

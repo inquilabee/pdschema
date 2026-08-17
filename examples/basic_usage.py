@@ -8,7 +8,7 @@ import pandas as pd
 
 from pdschema.columns import Column
 from pdschema.schema import Schema
-from pdschema.validators import IsNonEmptyString, IsPositive, Range
+from pdschema.validators import Choice, IsNonEmptyString, IsPositive, Length, Max, Min, Range
 
 
 # Example 1: Basic schema with simple validators
@@ -58,7 +58,31 @@ def nullable_columns_example():
     print("Nullable columns validation passed!")
 
 
+def builtin_validators_and_inference_example():
+    df = pd.DataFrame(
+        {
+            "grade": ["A", "B", "A"],
+            "code": ["ab", "cd", "ef"],
+            "age": [21, 34, 42],
+        }
+    )
+    inferred = Schema.infer_schema(df)
+    inferred.validate(df)
+    age_column = inferred.columns["age"]
+    age_column.infer_pyarrow_type(df["age"])
+    schema = Schema(
+        [
+            Column("grade", str, nullable=False, validators=[Choice(["A", "B", "C"])]),
+            Column("code", str, nullable=False, validators=[Length(min_length=2, max_length=2)]),
+            Column("age", int, nullable=False, validators=[Min(0), Max(120)]),
+        ]
+    )
+    schema.validate(df)
+    print("Builtin validators and inference example passed!")
+
+
 if __name__ == "__main__":
     print("Running basic usage examples...")
     basic_schema_example()
     nullable_columns_example()
+    builtin_validators_and_inference_example()

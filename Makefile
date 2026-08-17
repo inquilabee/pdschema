@@ -1,17 +1,20 @@
+SHIPGATE ?= uvx --python 3.13 shipgate
+PROJECT_ENV ?= .venv
+
 install-tools:
-	uvx shipgate install --suite full
+	$(SHIPGATE) install --suite full
 
 format:
-	uvx shipgate format --target . --full-tree
+	$(SHIPGATE) format --target . --full-tree --project-env $(PROJECT_ENV)
 
 check:
-	uvx shipgate check --target . --full-tree
+	$(SHIPGATE) check --target . --full-tree --project-env $(PROJECT_ENV)
 
 refactor:
-	uvx shipgate refactor check .
+	$(SHIPGATE) refactor check .
 
 test:
-	uv run pytest tests
+	uv run --python $(PROJECT_ENV) pytest tests
 
 commit:
 	git add .

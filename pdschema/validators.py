@@ -79,9 +79,7 @@ class Choice(Validator):
 class Length(Validator):
     def __init__(self, min_length: int | None = None, max_length: int | None = None):
         if min_length is None and max_length is None:
-            raise ValueError(
-                "At least one of min_length or max_length must be provided."
-            )
+            raise ValueError("At least one of min_length or max_length must be provided.")
         self.min_length = min_length
         self.max_length = max_length
 

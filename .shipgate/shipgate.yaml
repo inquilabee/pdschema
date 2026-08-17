@@ -12,12 +12,14 @@ checks:
     scope: ty-src
   radon.cc:
     # Letter rank is per-block. Median / p95 gate typical and tail complexity.
+    scope: python-src
     threshold: B
     median-mode: threshold
     median-threshold: 3
     p95-mode: threshold
     p95-threshold: 7
   radon.mi:
+    scope: python-src
     # Letter rank is per-file. Distribution floors are progressive (portable init);
     # pin absolute median/p5/p10 via calibrate when ready.
     threshold: B

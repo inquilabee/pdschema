@@ -18,7 +18,8 @@ A lightweight schema validation library for pandas. Define column contracts (typ
 ## Success
 
 Developers can:
-1. Write clear, reusable schemas with minimal boilerplate
-2. Get precise, actionable error messages when data doesn't match
-3. Validate function I/O with a decorator
-4. Build confidence in data quality without slowing pipelines
+
+- Write clear, reusable schemas with minimal boilerplate
+- Get precise, actionable error messages when data doesn't match
+- Validate function I/O with a decorator
+- Build confidence in data quality without slowing pipelines

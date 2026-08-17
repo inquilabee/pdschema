@@ -1,7 +1,7 @@
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import numpy as np
 import pandas as pd
@@ -90,9 +90,9 @@ class TypeRegistry:
         timedelta: pa.duration("us"),
     }
 
-    TYPE_MAPPINGS: ClassVar[list[dict[object, pa.DataType]]] = [
+    TYPE_MAPPINGS: ClassVar[list[Mapping[object, pa.DataType]]] = [
         PYARROW_PANDAS,
-        PYARROW_PYTHON,
+        cast(Mapping[object, pa.DataType], PYARROW_PYTHON),
     ]
 
     PANDAS_TYPE_PREDICATES: ClassVar[list[tuple[Callable[[object], bool], pa.DataType]]] = [

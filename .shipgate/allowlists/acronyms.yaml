@@ -1,6 +1,9 @@
-# Documented acronyms used in ShipGate prose (keys are allowlisted tokens).
+# Documented acronyms used in project prose (keys are allowlisted tokens).
 UI: user interface
 UX: user experience
 JSCPD: copy-paste detector tool
 SARIF: Static Analysis Results Interchange Format
 PR: pull request
+ETL: extract transform load
+MIT: Massachusetts Institute of Technology license
+LICENSE: license file name
