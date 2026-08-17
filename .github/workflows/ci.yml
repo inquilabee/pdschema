@@ -33,4 +33,4 @@ jobs:
       - name: Structural refactor rules
         run: uvx --python 3.13 shipgate refactor check .
       - name: Tests
-        run: uv run --python .venv pytest tests
+        run: uv run --python .venv pytest tests --cov=pdschema

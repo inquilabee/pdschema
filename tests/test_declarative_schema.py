@@ -33,7 +33,6 @@ def test_declarative_schema():
 
     # Validate the DataFrame
     assert schema.validate(valid_df) is True
-    # assert TestSchema.validate(valid_df) is True  # Class method validation
 
     # Create an invalid DataFrame (missing column)
     invalid_df = pd.DataFrame(

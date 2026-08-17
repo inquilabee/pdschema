@@ -36,7 +36,7 @@ def test_schema_validation():
             "name": ["Alice", "Bob", "Charlie"],
         }
     )
-    with pytest.raises(Exception, match="Missing column: age"):
+    with pytest.raises(ValueError, match="Missing column: age"):
         schema.validate(df_missing)
 
     # Invalid DataFrame - null in non-nullable column
