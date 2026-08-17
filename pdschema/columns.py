@@ -45,7 +45,9 @@ class Column:
         self.name = name
 
     def with_name(self, name: str) -> Self:
-        return self.__class__(name, self.dtype, self.nullable, deepcopy(self.validators))
+        clone = self.__class__(name, self.dtype, self.nullable)
+        clone.validators = deepcopy(self.validators)
+        return clone
 
     def to_pyarrow_type(self) -> pa.DataType:
         for mapping in TYPE_MAPPINGS:
@@ -58,9 +60,7 @@ class Column:
             inferred = infer_pyarrow_type_from_series(values)
             expected_type = self.to_pyarrow_type()
         except TypeError as err:
-            raise TypeCheckError(
-                f"Unsupported dtype for column {self.name!r}: series={values.dtype} ({err})"
-            ) from err
+            raise TypeCheckError(f"Unsupported dtype for column {self.name!r}: series={values.dtype} ({err})") from err
         if inferred == pa.null() or str(inferred) != str(expected_type):
             raise TypeCheckError(
                 f"Unsupported dtype for column {self.name!r}: series={values.dtype}, "
@@ -85,9 +85,7 @@ class Column:
             for validator in self.validators:
                 try:
                     if not validator.validate(val):
-                        errors.append(
-                            f"Validation failed in '{self.name}' at index {i}: {val} ({validator})"
-                        )
+                        errors.append(f"Validation failed in '{self.name}' at index {i}: {val} ({validator})")
                 except Exception as exc:
                     errors.append(f"Validator error in '{self.name}' at index {i}: {exc}")
         return errors
@@ -134,8 +132,5 @@ class Column:
         except TypeError as err:
             return f"Type mismatch in column '{self.name}': {err}"
         if str(inferred) != str(expected_type):
-            return (
-                f"Type mismatch in column '{self.name}': "
-                f"expected {expected_type}, got {inferred}"
-            )
+            return f"Type mismatch in column '{self.name}': expected {expected_type}, got {inferred}"
         return None

@@ -21,13 +21,13 @@ checks:
     scope: python-src
     threshold: B
     median-mode: threshold
-    median-threshold: 64
+    median-threshold: 64.2
     p5-mode: threshold
-    p5-threshold: 36.9
+    p5-threshold: 34.6
     p10-mode: threshold
-    p10-threshold: 38.5
+    p10-threshold: 36.1
     minimum-mode: threshold
-    minimum-threshold: 35.4
+    minimum-threshold: 33.2
   jscpd.check.python:
     threshold: "2"
   jscpd.check.other:

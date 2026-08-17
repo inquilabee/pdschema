@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from functools import wraps
 from inspect import signature
-from typing import ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar, cast
 
 import pandas as pd
 
@@ -61,10 +61,11 @@ def pdfunction(
             result = func(*args, **kwargs)
 
             if isinstance(result, dict):
+                payload = cast(dict[str, object], result)
                 for output_name, output_schema in outputs.items():
-                    if output_name not in result:
+                    if output_name not in payload:
                         raise SchemaValidationError(f"Missing output: {output_name}")
-                    _validate_schema_or_type(output_name, result[output_name], output_schema, is_output=True)
+                    _validate_schema_or_type(output_name, payload[output_name], output_schema, is_output=True)
 
             return result
 

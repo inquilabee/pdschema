@@ -2,6 +2,21 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 
 
+def compare(op: str, left: object, right: object) -> bool:
+    reflected = {"__lt__": "__gt__", "__le__": "__ge__", "__gt__": "__lt__", "__ge__": "__le__"}
+    for obj, name in ((left, op), (right, reflected[op])):
+        method = getattr(obj, name, None)
+        if method is None:
+            continue
+        try:
+            result = method(right if obj is left else left)
+        except TypeError:
+            continue
+        if result is not NotImplemented:
+            return bool(result)
+    return False
+
+
 class Validator(ABC):
     @abstractmethod
     def validate(self, value: object) -> bool:
@@ -27,7 +42,7 @@ class CallableValidator(Validator):
 
 class IsPositive(Validator):
     def validate(self, value: object) -> bool:
-        return value > 0
+        return compare("__gt__", value, 0)
 
 
 class IsNonEmptyString(Validator):
@@ -43,8 +58,10 @@ class BoundComparison(Validator):
 
     def validate(self, value: object) -> bool:
         if self.upper:
-            return value < self.threshold if self.exclusive else value <= self.threshold
-        return value > self.threshold if self.exclusive else value >= self.threshold
+            op = "__lt__" if self.exclusive else "__le__"
+        else:
+            op = "__gt__" if self.exclusive else "__ge__"
+        return compare(op, value, self.threshold)
 
     def __str__(self) -> str:
         op = ("<" if self.exclusive else "<=") if self.upper else (">" if self.exclusive else ">=")
@@ -115,4 +132,4 @@ class Range(Validator):
         self.max_value = max_value
 
     def validate(self, value: object) -> bool:
-        return self.min_value <= value <= self.max_value
+        return compare("__le__", self.min_value, value) and compare("__le__", value, self.max_value)

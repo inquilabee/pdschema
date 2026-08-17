@@ -3,12 +3,12 @@ repos:
     hooks:
       - id: shipgate-format
         name: shipgate format
-        entry: bash -c 'scripts/ensure-venv.sh && uvx --python 3.13 shipgate format --target . --full-tree --project-env .venv'
+        entry: scripts/shipgate-format.sh
         language: system
         pass_filenames: false
       - id: shipgate-check
         name: shipgate check
-        entry: bash -c 'scripts/ensure-venv.sh && uvx --python 3.13 shipgate check --target . --full-tree --project-env .venv'
+        entry: scripts/shipgate-check.sh
         language: system
         pass_filenames: false
       - id: shipgate-refactor

@@ -32,7 +32,12 @@ class Schema(metaclass=SchemaMeta):
         if not columns and not self._declared_columns:
             self.columns = {}
         elif columns:
-            self.columns = {col.name: col for col in columns}
+            named: dict[str, Column] = {}
+            for col in columns:
+                if col.name is None:
+                    raise SchemaValidationError("Column name cannot be None")
+                named[col.name] = col
+            self.columns = named
         else:
             self.columns = {
                 col_name: col_obj.with_name(col_name) for col_name, col_obj in self._declared_columns.items()
@@ -49,35 +54,34 @@ class Schema(metaclass=SchemaMeta):
         return "\n".join(lines)
 
     def validate(self, df: pd.DataFrame) -> bool:
-        errors = []
+        errors = self._collect_errors(df)
+        if errors:
+            raise SchemaValidationError("Schema validation failed:\n" + "\n".join(errors))
+        return True
 
+    def _collect_errors(self, df: pd.DataFrame) -> list[str]:
+        errors: list[str] = []
         if self.strict:
             extra = [name for name in df.columns if name not in self.columns]
             if extra:
                 errors.append(f"Unexpected columns: {extra}")
-
         for col_name, col in self.columns.items():
-            if not col_name:
-                raise SchemaValidationError("Column name cannot be None")
+            errors.extend(self._column_errors(df, col_name, col))
+        return errors
 
-            if missing := col.check_missing(df):
-                errors.append(missing)
-                continue
-
-            series = df[col_name]
-
-            if nullability := col.check_nullability(series):
-                errors.append(nullability)
-
-            if type_error := col.check_type(series):
-                errors.append(type_error)
-
-            errors.extend(col.validate(series))
-
-        if errors:
-            raise SchemaValidationError("Schema validation failed:\n" + "\n".join(errors))
-
-        return True
+    def _column_errors(self, df: pd.DataFrame, col_name: str, col: Column) -> list[str]:
+        if not col_name:
+            raise SchemaValidationError("Column name cannot be None")
+        if missing := col.check_missing(df):
+            return [missing]
+        series = df[col_name]
+        errors: list[str] = []
+        if nullability := col.check_nullability(series):
+            errors.append(nullability)
+        if type_error := col.check_type(series):
+            errors.append(type_error)
+        errors.extend(col.validate(series))
+        return errors
 
     @classmethod
     def _infer_column_type(cls, series: pd.Series) -> type:

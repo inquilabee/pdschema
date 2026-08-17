@@ -53,6 +53,9 @@ ignore = []
 [tool.ruff.lint.isort]
 known-first-party = ["pdschema"]
 
+[tool.deptry]
+pep621_dev_dependency_groups = ["dev"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
