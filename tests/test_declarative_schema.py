@@ -45,13 +45,25 @@ def test_declarative_schema():
     with pytest.raises(ValueError, match="Schema validation failed:"):
         schema.validate(invalid_df)
 
-    # Create an invalid DataFrame (null in non-nullable column)
-    invalid_df = pd.DataFrame(
-        {
-            "id": [1, None, 3],
-            "name": ["Alice", "Bob", "Charlie"],
-        }
-    )
-
     with pytest.raises(ValueError, match="Schema validation failed:"):
         schema.validate(invalid_df)
+
+
+def test_declarative_schema_inherits_parent_columns():
+    class BaseSchema(Schema):
+        id = Column(dtype=int, nullable=False)
+
+    class ChildSchema(BaseSchema):
+        name = Column(dtype=str, nullable=True)
+
+    schema = ChildSchema()
+    assert list(schema.columns) == ["id", "name"]
+    df = pd.DataFrame({"id": [1], "name": ["Ada"]})
+    assert schema.validate(df) is True
+
+
+def test_strict_schema_rejects_extra_columns():
+    schema = Schema([Column("id", int, nullable=False)], strict=True)
+    df = pd.DataFrame({"id": [1], "extra": ["x"]})
+    with pytest.raises(ValueError, match="Unexpected columns"):
+        schema.validate(df)

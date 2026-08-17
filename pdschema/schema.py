@@ -7,15 +7,18 @@ from pdschema.columns import Column
 
 
 class SchemaMeta(type):
-    """Metaclass for Schema to collect declared Column fields."""
+    """Metaclass for Schema to collect declared Column fields across the MRO."""
 
     def __new__(cls, name, bases, dct):
-        # Collect Column instances declared in the class body
-        columns = {key: value for key, value in dct.items() if isinstance(value, Column)}
-        # Remove the Column instances from the class dictionary
-        for key in columns:
+        columns: dict[str, Column] = {}
+        for base in bases:
+            declared = getattr(base, "_declared_columns", None)
+            if declared:
+                columns.update(declared)
+        own = {key: value for key, value in dct.items() if isinstance(value, Column)}
+        for key in own:
             dct.pop(key)
-        # Add the collected columns as a class attribute
+        columns.update(own)
         dct["_declared_columns"] = columns
         return super().__new__(cls, name, bases, dct)
 
@@ -23,9 +26,9 @@ class SchemaMeta(type):
 class Schema(metaclass=SchemaMeta):
     _declared_columns: ClassVar[dict[str, Column]] = {}
 
-    def __init__(self, columns: list[Column] | None = None):
+    def __init__(self, columns: list[Column] | None = None, *, strict: bool = False):
+        self.strict = strict
         if not columns and not self._declared_columns:
-            # Default to an empty schema if no columns are provided
             self.columns = {}
         elif columns:
             self.columns = {col.name: col for col in columns}
@@ -35,11 +38,6 @@ class Schema(metaclass=SchemaMeta):
             }
 
     def __repr__(self) -> str:
-        """Return a string representation of the Schema.
-
-        Returns:
-            str: A formatted string showing the schema's columns and their properties
-        """
         lines = ["Schema("]
         for col in self.columns.values():
             nullable_str = "nullable=True" if col.nullable else "nullable=False"
@@ -52,22 +50,24 @@ class Schema(metaclass=SchemaMeta):
     def validate(self, df: pd.DataFrame) -> bool:
         errors = []
 
+        if self.strict:
+            extra = [name for name in df.columns if name not in self.columns]
+            if extra:
+                errors.append(f"Unexpected columns: {extra}")
+
         for col_name, col in self.columns.items():
             if not col_name:
                 raise ValueError("Column name cannot be None")
 
-            # Call the check_missing method of the Column class
             if missing := col.check_missing(df):
                 errors.append(missing)
                 continue
 
             series = df[col_name]
 
-            # Call the check_nullability method of the Column class
             if nullability := col.check_nullability(series):
                 errors.append(nullability)
 
-            # Call the check_type method of the Column class
             if type_error := col.check_type(series):
                 errors.append(type_error)
 
@@ -78,9 +78,8 @@ class Schema(metaclass=SchemaMeta):
 
         return True
 
-    @staticmethod
-    def _infer_column_type(series: pd.Series) -> type:
-        """Infer the Python type for a pandas Series."""
+    @classmethod
+    def _infer_column_type(cls, series: pd.Series) -> type:
         if series.empty:
             return object
 
@@ -90,37 +89,25 @@ class Schema(metaclass=SchemaMeta):
             (pd.api.types.is_bool_dtype, bool),
             (pd.api.types.is_string_dtype, str),
             (pd.api.types.is_datetime64_dtype, datetime),
-            (lambda dtype: hasattr(dtype, "categories"), str),
-            (lambda series: series.apply(lambda x: isinstance(x, dict)).any(), dict),
+            (lambda values: isinstance(values.dtype, pd.CategoricalDtype), str),
+            (lambda values: values.apply(lambda x: isinstance(x, dict)).any(), dict),
         ]
 
         for check, inferred_type in type_checks:
-            if callable(check) and check(series):
+            if check(series):
                 return inferred_type
 
-        # For unknown types, try to infer from the first non-null value
         sample = None if series.empty else series.dropna().iloc[0]
         return type(sample) if sample is not None else object
 
-    @staticmethod
-    def infer_schema(df: pd.DataFrame) -> "Schema":
-        """Infer a Schema from a pandas DataFrame.
-
-        This method analyzes the DataFrame's columns and their data to create
-        an appropriate Schema with inferred column definitions.
-
-        Args:
-            df: The pandas DataFrame to infer the schema from
-
-        Returns:
-            Schema: A new Schema instance with inferred column definitions
-        """
+    @classmethod
+    def infer_schema(cls, df: pd.DataFrame) -> "Schema":
         columns = [
             Column(
                 name=col_name,
-                dtype=Schema._infer_column_type(df[col_name]),
+                dtype=cls._infer_column_type(df[col_name]),
                 nullable=bool(df[col_name].isnull().any()),
             )
             for col_name in df.columns
         ]
-        return Schema(columns)
+        return cls(columns)
