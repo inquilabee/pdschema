@@ -44,8 +44,13 @@ def test_declarative_schema():
     with pytest.raises(ValueError, match="Schema validation failed:"):
         schema.validate(invalid_df)
 
-    with pytest.raises(ValueError, match="Schema validation failed:"):
-        schema.validate(invalid_df)
+
+def test_empty_list_overrides_declared_columns():
+    class Decl(Schema):
+        id = Column(dtype=int, nullable=False)
+
+    assert list(Decl().columns) == ["id"]
+    assert Decl([]).columns == {}
 
 
 def test_declarative_schema_inherits_parent_columns():
@@ -59,6 +64,19 @@ def test_declarative_schema_inherits_parent_columns():
     assert list(schema.columns) == ["id", "name"]
     df = pd.DataFrame({"id": [1], "name": ["Ada"]})
     assert schema.validate(df) is True
+
+
+def test_multiple_inheritance_prefers_earlier_base():
+    class SchemaA(Schema):
+        id = Column(dtype=int, nullable=False)
+
+    class SchemaB(Schema):
+        id = Column(dtype=str, nullable=True)
+
+    class SchemaC(SchemaA, SchemaB):
+        pass
+
+    assert SchemaC().columns["id"].dtype is int
 
 
 def test_strict_schema_rejects_extra_columns():

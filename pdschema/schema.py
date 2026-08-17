@@ -12,7 +12,7 @@ class SchemaMeta(type):
 
     def __new__(cls, name, bases, dct):
         columns: dict[str, Column] = {}
-        for base in bases:
+        for base in reversed(bases):
             declared = getattr(base, "_declared_columns", None)
             if declared:
                 columns.update(declared)
@@ -29,19 +29,20 @@ class Schema(metaclass=SchemaMeta):
 
     def __init__(self, columns: list[Column] | None = None, *, strict: bool = False):
         self.strict = strict
-        if not columns and not self._declared_columns:
-            self.columns = {}
-        elif columns:
-            named: dict[str, Column] = {}
-            for col in columns:
-                if col.name is None:
-                    raise SchemaValidationError("Column name cannot be None")
-                named[col.name] = col
-            self.columns = named
-        else:
-            self.columns = {
-                col_name: col_obj.with_name(col_name) for col_name, col_obj in self._declared_columns.items()
-            }
+        if columns is None:
+            if not self._declared_columns:
+                self.columns = {}
+            else:
+                self.columns = {
+                    col_name: col_obj.with_name(col_name) for col_name, col_obj in self._declared_columns.items()
+                }
+            return
+        named: dict[str, Column] = {}
+        for col in columns:
+            if col.name is None:
+                raise SchemaValidationError("Column name cannot be None")
+            named[col.name] = col
+        self.columns = named
 
     def __repr__(self) -> str:
         lines = ["Schema("]
