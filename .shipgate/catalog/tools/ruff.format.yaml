@@ -20,7 +20,6 @@ ruff.format:
       flag: --check
       style: boolean
   configuration:
-    bundled: configs/ruff.toml
     discover:
       - pyproject.toml
       - .ruff.toml

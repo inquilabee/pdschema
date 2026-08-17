@@ -50,12 +50,19 @@ class Column:
         return clone
 
     def to_pyarrow_type(self) -> pa.DataType:
-        if isinstance(self.dtype, str) and self.dtype in TypeRegistry.PANDAS_TO_PA:
-            return TypeRegistry.PANDAS_TO_PA[self.dtype]
+        dtype = self.dtype
+        pyarrow_dtype = getattr(dtype, "pyarrow_dtype", None)
+        if pyarrow_dtype is not None:
+            return pyarrow_dtype
+        if isinstance(dtype, str) and dtype in TypeRegistry.PANDAS_TO_PA:
+            return TypeRegistry.PANDAS_TO_PA[dtype]
+        name = str(dtype)
+        if name in TypeRegistry.PANDAS_TO_PA:
+            return TypeRegistry.PANDAS_TO_PA[name]
         for mapping in TYPE_MAPPINGS:
-            if self.dtype in mapping:
-                return mapping[self.dtype]
-        raise TypeCheckError(f"{UNSUPPORTED_DTYPE}: {self.dtype}")
+            if dtype in mapping:
+                return mapping[dtype]
+        raise TypeCheckError(f"{UNSUPPORTED_DTYPE}: {dtype}")
 
     def infer_pyarrow_type(self, values: pd.Series) -> pa.DataType:
         try:

@@ -2,8 +2,7 @@ SHIPGATE ?= uvx --python 3.13 shipgate
 PROJECT_ENV ?= .venv
 
 setup:
-	uv venv $(PROJECT_ENV) --python 3.13
-	uv pip install --python $(PROJECT_ENV) -e ".[dev]"
+	scripts/ensure-venv.sh
 	$(SHIPGATE) install --suite full
 
 install-tools:

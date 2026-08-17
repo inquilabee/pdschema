@@ -79,6 +79,22 @@ def test_multiple_inheritance_prefers_earlier_base():
     assert SchemaC().columns["id"].dtype is int
 
 
+def test_diamond_inheritance_follows_mro():
+    class SchemaA(Schema):
+        x = Column(dtype=int, nullable=False)
+
+    class SchemaB(SchemaA):
+        pass
+
+    class SchemaC(SchemaA):
+        x = Column(dtype=str, nullable=True)
+
+    class SchemaD(SchemaB, SchemaC):
+        pass
+
+    assert SchemaD().columns["x"].dtype is int
+
+
 def test_strict_schema_rejects_extra_columns():
     schema = Schema([Column("id", int, nullable=False)], strict=True)
     df = pd.DataFrame({"id": [1], "extra": ["x"]})

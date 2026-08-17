@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pandas as pd
 import pytest
 
@@ -75,3 +77,23 @@ def test_column_string_pandas_dtype_name():
     col = Column("age", "int64")
     assert str(col.to_pyarrow_type()) == "int64"
     assert col.check_type(pd.Series([1, 2, 3], dtype="int64")) is None
+
+
+def test_column_accepts_numpy_dtype_object():
+    series = pd.Series([1, 2, 3], dtype="int64")
+    col = Column("age", series.dtype)
+    assert col.check_type(series) is None
+
+
+def test_arrow_dtype_preserves_width():
+    int32_series = pd.Series([1, 2, 3], dtype="int32[pyarrow]")
+    assert Column("c", "int32").check_type(int32_series) is None
+    assert Column("c", "int64").check_type(int32_series) is not None
+    float32_series = pd.Series([1.0, 2.0], dtype="float32[pyarrow]")
+    assert Column("c", "float32").check_type(float32_series) is None
+
+
+def test_naive_datetime_rejects_timezone_series():
+    series = pd.Series(pd.date_range("2024-01-01", periods=2, tz="UTC"))
+    error = Column("t", datetime).check_type(series)
+    assert error is not None

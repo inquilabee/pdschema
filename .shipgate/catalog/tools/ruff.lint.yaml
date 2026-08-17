@@ -33,7 +33,6 @@ ruff.lint:
       flag: --output-format
       style: scalar
   configuration:
-    bundled: configs/ruff.toml
     discover:
       - pyproject.toml
       - .ruff.toml

@@ -44,6 +44,8 @@ def pdfunction(
                 schema_instance = schema_or_type() if isinstance(schema_or_type, type) else schema_or_type
                 schema_instance.validate(value)
             elif isinstance(schema_or_type, type):
+                if schema_or_type is int and isinstance(value, bool):
+                    raise FunctionSchemaError(f"{kind} '{name}' must be of type {schema_or_type}")
                 if not isinstance(value, schema_or_type):
                     raise FunctionSchemaError(f"{kind} '{name}' must be of type {schema_or_type}")
             else:
@@ -54,6 +56,8 @@ def pdfunction(
             bound = func_signature.bind(*args, **kwargs)
             bound.apply_defaults()
             for arg_name, schema_or_type in arguments.items():
+                if arg_name not in func_signature.parameters:
+                    raise FunctionSchemaError(f"unknown argument '{arg_name}'")
                 if arg_name not in bound.arguments:
                     raise FunctionSchemaError(f"Missing required argument: {arg_name}")
                 _validate_schema_or_type(arg_name, bound.arguments[arg_name], schema_or_type, is_output=False)

@@ -131,3 +131,12 @@ def test_pdfunction_requires_dict_when_outputs_declared():
     df = pd.DataFrame({"value": [1, 2, 3]})
     with pytest.raises(TypeError, match="Declared outputs require a dict return value"):
         process_data(df=df)
+
+
+def test_pdfunction_rejects_bool_for_int():
+    @pdfunction(arguments={"n": int})
+    def add1(n):
+        return n + 1
+
+    with pytest.raises(TypeError, match="Argument 'n' must be of type"):
+        add1(True)

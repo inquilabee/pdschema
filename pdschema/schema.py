@@ -11,17 +11,42 @@ class SchemaMeta(type):
     """Metaclass for Schema to collect declared Column fields across the MRO."""
 
     def __new__(cls, name, bases, dct):
-        columns: dict[str, Column] = {}
-        for base in reversed(bases):
-            declared = getattr(base, "_declared_columns", None)
-            if declared:
-                columns.update(declared)
         own = {key: value for key, value in dct.items() if isinstance(value, Column)}
         for key in own:
             dct.pop(key)
+        columns: dict[str, Column] = {}
+        for base in reversed(cls._base_mro(bases)):
+            declared = getattr(base, "_declared_columns", None)
+            if declared:
+                columns.update(declared)
         columns.update(own)
         dct["_declared_columns"] = columns
         return super().__new__(cls, name, bases, dct)
+
+    @staticmethod
+    def _c3_head(sequences: list[list[type]]) -> type:
+        for seq in sequences:
+            head = seq[0]
+            if all(head not in other[1:] for other in sequences):
+                return head
+        raise TypeError("Cannot create a consistent column MRO")
+
+    @staticmethod
+    def _base_mro(bases: tuple[type, ...]) -> tuple[type, ...]:
+        if not bases:
+            return ()
+        sequences = [list(base.__mro__) for base in bases]
+        sequences.append(list(bases))
+        result: list[type] = []
+        while True:
+            nonempty = [seq for seq in sequences if seq]
+            if not nonempty:
+                return tuple(result)
+            candidate = SchemaMeta._c3_head(nonempty)
+            result.append(candidate)
+            for seq in sequences:
+                if seq and seq[0] is candidate:
+                    del seq[0]
 
 
 class Schema(metaclass=SchemaMeta):

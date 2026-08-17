@@ -127,15 +127,21 @@ def infer_pyarrow_type_from_series(s: pd.Series) -> pa.DataType:
     """Infer PyArrow type from a pandas Series."""
     if s.empty or s.isna().all():
         return pa.null()
-    if s.dtype == "object":
+    dtype = s.dtype
+    pyarrow_dtype = getattr(dtype, "pyarrow_dtype", None)
+    if pyarrow_dtype is not None:
+        return pyarrow_dtype
+    if isinstance(dtype, pd.DatetimeTZDtype):
+        return pa.timestamp("us", tz=str(dtype.tz))
+    if dtype == "object":
         return TypeRegistry.infer_object_series_type(s)
-    dtype_name = str(s.dtype)
+    dtype_name = str(dtype)
     if dtype_name in TypeRegistry.PANDAS_TO_PA:
         return TypeRegistry.PANDAS_TO_PA[dtype_name]
     for predicate, pa_type in TypeRegistry.PANDAS_TYPE_PREDICATES:
-        if predicate(s.dtype):
+        if predicate(dtype):
             return pa_type
-    raise TypeError(f"Unsupported dtype: {s.dtype}")
+    raise TypeError(f"Unsupported dtype: {dtype}")
 
 
 TYPE_MAPPINGS = TypeRegistry.TYPE_MAPPINGS
