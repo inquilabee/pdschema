@@ -60,7 +60,7 @@ draft = Schema.infer_schema(df)
 Schema([Column("idx", int)], strict=True).validate(df)
 ```
 
-**Built-in validators** — `IsNonEmptyString`, `IsPositive`, `Range`, `Min`, `Max`, `GreaterThan`, `LessThan`, `Choice`, `Length`, and more. All validators are extensible via the `Validator` ABC.
+**Built-in validators** — `IsNonEmptyString`, `IsPositive`, `Range`, `Min`, `Max`, `GreaterThan`, `LessThan`, `Choice`, `Length`, and more. All validators are extensible via the `Validator` abstract base class.
 
 **`@pdfunction` decorator** — validate DataFrame inputs and outputs at function boundaries:
 

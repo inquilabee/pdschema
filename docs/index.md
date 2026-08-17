@@ -16,7 +16,7 @@ Types, nullability, and per-cell checks — no cleaning or transforms.
 
 <div class="pd-card" markdown="0">
 
-### Column Contracts
+#### Column Contracts
 
 Declare dtype, nullability, and per-column validators in a `Schema`.
 
@@ -24,7 +24,7 @@ Declare dtype, nullability, and per-column validators in a `Schema`.
 
 <div class="pd-card" markdown="0">
 
-### Class-Based Schemas
+#### Class-Based Schemas
 
 Define columns as class attributes — inherit, compose, reuse.
 
@@ -32,7 +32,7 @@ Define columns as class attributes — inherit, compose, reuse.
 
 <div class="pd-card" markdown="0">
 
-### Function Validation
+#### Function Validation
 
 `@pdfunction` checks DataFrame inputs and outputs at call time.
 
@@ -40,7 +40,7 @@ Define columns as class attributes — inherit, compose, reuse.
 
 <div class="pd-card" markdown="0">
 
-### Extensible Validators
+#### Extensible Validators
 
 Subclass `Validator` or pass any `callable` that returns a bool.
 

@@ -1,6 +1,8 @@
 site_name: pdschema
 site_url: https://inquilabee.github.io/pdschema/
-site_description: Validate pandas DataFrames against column contracts. Types, nullability, and per-cell checks.
+site_description: >-
+  Validate pandas DataFrames against column contracts.
+  Types, nullability, and per-cell checks.
 repo_url: https://github.com/inquilabee/pdschema
 repo_name: inquilabee/pdschema
 
