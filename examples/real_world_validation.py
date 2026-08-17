@@ -7,7 +7,6 @@ validation scenarios.
 
 import re
 from datetime import datetime
-from typing import Any
 
 import pandas as pd
 
@@ -20,7 +19,7 @@ class IsValidDate(Validator):
         super().__init__()
         self.format = format
 
-    def validate(self, value: Any) -> bool:
+    def validate(self, value: object) -> bool:
         if not isinstance(value, str):
             return False
         try:
@@ -41,7 +40,7 @@ class IsValidCurrency(Validator):
         self.max_amount = max_amount
         self.pattern = re.compile(r"^\$?\d+(\.\d{2})?$")
 
-    def validate(self, value: Any) -> bool:
+    def validate(self, value: object) -> bool:
         if not isinstance(value, str):
             return False
         if not self.pattern.match(value):
@@ -68,7 +67,7 @@ class IsValidSKU(Validator):
         self.prefix = prefix
         self.pattern = re.compile(r"^[A-Z0-9-]+$")
 
-    def validate(self, value: Any) -> bool:
+    def validate(self, value: object) -> bool:
         if not isinstance(value, str):
             return False
         if not self.pattern.match(value):

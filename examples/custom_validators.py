@@ -5,7 +5,6 @@ This example demonstrates how to create and use custom validators with pdschema.
 """
 
 import re
-from typing import Any
 
 import pandas as pd
 
@@ -19,7 +18,7 @@ class IsValidEmail(Validator):
         # RFC 5322 compliant email regex
         self.email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
-    def validate(self, value: Any) -> bool:
+    def validate(self, value: object) -> bool:
         if not isinstance(value, str):
             return False
         return bool(self.email_pattern.match(value))
@@ -36,7 +35,7 @@ class IsValidPhoneNumber(Validator):
         # Convert format to regex pattern
         self.pattern = re.compile("^" + "".join(r"\d" if ch == "X" else re.escape(ch) for ch in format) + "$")
 
-    def validate(self, value: Any) -> bool:
+    def validate(self, value: object) -> bool:
         if not isinstance(value, str):
             return False
         return bool(self.pattern.match(value))
@@ -58,7 +57,7 @@ class IsStrongPassword(Validator):
             "special": lambda x: any(not c.isalnum() for c in x),
         }
 
-    def validate(self, value: Any) -> bool:
+    def validate(self, value: object) -> bool:
         if not isinstance(value, str):
             return False
         return all(check(value) for check in self.patterns.values())

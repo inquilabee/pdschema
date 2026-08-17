@@ -6,7 +6,6 @@ and nested data structures.
 """
 
 import json
-from typing import Any
 
 import pandas as pd
 
@@ -18,7 +17,7 @@ class IsValidJSON(Validator):
     def __init__(self):
         super().__init__()
 
-    def validate(self, value: Any) -> bool:
+    def validate(self, value: object) -> bool:
         if not isinstance(value, str):
             return False
         try:
@@ -33,7 +32,7 @@ class IsValidAddress(Validator):
     def __init__(self):
         super().__init__()
 
-    def validate(self, value: Any) -> bool:
+    def validate(self, value: object) -> bool:
         if not isinstance(value, str):
             return False
         try:

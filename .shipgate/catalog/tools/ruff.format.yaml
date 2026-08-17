@@ -22,10 +22,9 @@ ruff.format:
   configuration:
     bundled: configs/ruff.toml
     discover:
-      - .shipgate/configs/ruff.toml
+      - pyproject.toml
       - .ruff.toml
       - ruff.toml
-      - pyproject.toml
     pyproject_section: tool.ruff
     precedence:
       - cli

@@ -130,6 +130,8 @@ class Range(Validator):
     def __init__(self, min_value: object, max_value: object):
         self.min_value = min_value
         self.max_value = max_value
+        self._lower = Min(min_value)
+        self._upper = Max(max_value)
 
     def validate(self, value: object) -> bool:
-        return compare("__le__", self.min_value, value) and compare("__le__", value, self.max_value)
+        return self._lower.validate(value) and self._upper.validate(value)

@@ -48,7 +48,7 @@ def calculate_average_scores(users, scores, min_score):
         min_score: Minimum score threshold
 
     Returns:
-        DataFrame with user information and average scores
+        dict with key ``result`` mapping to a DataFrame of users and average scores
     """
     # Merge users and scores
     result = pd.merge(users, scores, left_on="id", right_on="user_id")
