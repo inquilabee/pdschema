@@ -1,7 +1,7 @@
 suite: full
 env: managed
 target: .
-changed-only: true
+changed-only: false
 error-format: compact
 configs:
   mode: auto
@@ -11,7 +11,6 @@ checks:
   ty.check:
     scope: ty-src
   radon.cc:
-    # Letter rank is per-block. Median / p95 gate typical and tail complexity.
     scope: python-src
     threshold: B
     median-mode: threshold
@@ -20,13 +19,15 @@ checks:
     p95-threshold: 7
   radon.mi:
     scope: python-src
-    # Letter rank is per-file. Distribution floors are progressive (portable init);
-    # pin absolute median/p5/p10 via calibrate when ready.
     threshold: B
-    median-mode: progressive
-    p5-mode: progressive
-    p10-mode: progressive
-    minimum-mode: progressive
+    median-mode: threshold
+    median-threshold: 64
+    p5-mode: threshold
+    p5-threshold: 36.9
+    p10-mode: threshold
+    p10-threshold: 38.5
+    minimum-mode: threshold
+    minimum-threshold: 35.4
   jscpd.check.python:
     threshold: "2"
   jscpd.check.other:

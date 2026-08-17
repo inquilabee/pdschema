@@ -65,7 +65,8 @@ line_length = 120
 
 [tool.ruff]
 line-length = 120
-target-version = "py38"
+target-version = "py312"
+src = ["pdschema", "tests", "examples"]
 
 [tool.ruff.lint]
 select = ["E", "F", "B", "I", "N", "UP", "PL", "RUF"]
