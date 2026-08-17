@@ -11,9 +11,7 @@ from typing import Any
 
 import pandas as pd
 
-from pdschema.columns import Column
-from pdschema.schema import Schema
-from pdschema.validators import IsNonEmptyString, IsPositive, Validator
+from pdschema import Column, IsNonEmptyString, IsPositive, Schema, Validator
 
 
 # Custom validator for date format

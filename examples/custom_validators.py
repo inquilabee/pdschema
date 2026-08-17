@@ -9,9 +9,7 @@ from typing import Any
 
 import pandas as pd
 
-from pdschema.columns import Column
-from pdschema.schema import Schema
-from pdschema.validators import Validator
+from pdschema import Column, Schema, Validator
 
 
 # Example 1: Custom validator for email format
@@ -36,7 +34,7 @@ class IsValidPhoneNumber(Validator):
         super().__init__()
         self.format = format
         # Convert format to regex pattern
-        self.pattern = re.compile(r"^\d{3}-\d{3}-\d{4}$")
+        self.pattern = re.compile("^" + "".join(r"\d" if ch == "X" else re.escape(ch) for ch in format) + "$")
 
     def validate(self, value: Any) -> bool:
         if not isinstance(value, str):

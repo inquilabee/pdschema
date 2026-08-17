@@ -6,9 +6,7 @@ This example demonstrates common patterns for schema validation using pdschema.
 
 import pandas as pd
 
-from pdschema.columns import Column
-from pdschema.schema import Schema
-from pdschema.validators import Choice, IsNonEmptyString, IsPositive, Length, Max, Min, Range
+from pdschema import Choice, Column, IsNonEmptyString, IsPositive, Length, Max, Min, Range, Schema
 
 
 # Example 1: Basic schema with simple validators

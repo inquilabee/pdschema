@@ -7,9 +7,7 @@ when working with pdschema.
 
 import pandas as pd
 
-from pdschema.columns import Column
-from pdschema.schema import Schema
-from pdschema.validators import IsNonEmptyString, IsPositive, Range
+from pdschema import Column, IsNonEmptyString, IsPositive, Range, Schema
 
 
 def error_handling_example():

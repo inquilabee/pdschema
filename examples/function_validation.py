@@ -8,10 +8,7 @@ This example shows how to use the pdfunction decorator to validate:
 
 import pandas as pd
 
-from pdschema.columns import Column
-from pdschema.functions import pdfunction
-from pdschema.schema import Schema
-from pdschema.validators import IsNonEmptyString, IsPositive, Range
+from pdschema import Column, IsNonEmptyString, IsPositive, Range, Schema, pdfunction
 
 
 @pdfunction(
