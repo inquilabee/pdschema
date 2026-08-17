@@ -39,6 +39,12 @@ def test_pdfunction_basic():
     with pytest.raises(TypeError, match="Argument 'multiplier' must be of type <class 'int'>"):
         multiply_values(df=df, multiplier="2")
 
+    with pytest.raises(TypeError, match="Argument 'multiplier' must be of type <class 'int'>"):
+        multiply_values(df, "2")
+
+    with pytest.raises(TypeError, match="missing a required argument: 'multiplier'"):
+        multiply_values(df=df)
+
 
 def test_pdfunction_multiple_outputs():
     @pdfunction(

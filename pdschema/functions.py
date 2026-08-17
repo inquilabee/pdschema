@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from functools import wraps
+from inspect import signature
 from typing import Any
 
 import pandas as pd
@@ -13,32 +14,16 @@ def pdfunction(
 ) -> Callable:
     """Decorator for validating pandas function inputs and outputs against schemas.
 
-    Args:
-        arguments: Dictionary mapping argument names to their expected schemas or types
-        outputs: Dictionary mapping output names to their expected schemas
-
-    Returns:
-        Callable: Decorated function with schema validation
-
-    Example:
-        @pdfunction(
-            arguments={
-                "df_1": Schema([Column("id", int)]),
-                "df_2": Schema([Column("value", float)]),
-                "x": int,
-            },
-            outputs={
-                "result": Schema([Column("sum", float)]),
-            },
-        )
-        def process_data(df_1, df_2, x):
-            # Function implementation
-            return {"result": result_df}
+    Every name in ``arguments`` is validated whether the caller used positional
+    or keyword arguments. ``outputs`` expects the wrapped function to return a
+    dict of DataFrames (or other declared types).
     """
     arguments = arguments or {}
     outputs = outputs or {}
 
     def decorator(func: Callable) -> Callable:
+        func_signature = signature(func)
+
         @wraps(func)
         def _validate_schema_or_type(
             name: str,
@@ -47,10 +32,11 @@ def pdfunction(
             is_output: bool = False,
         ):
             kind = "Output" if is_output else "Argument"
-            if isinstance(schema_or_type, Schema) or issubclass(schema_or_type, Schema):
+            if isinstance(schema_or_type, Schema) or (
+                isinstance(schema_or_type, type) and issubclass(schema_or_type, Schema)
+            ):
                 if not isinstance(value, pd.DataFrame):
                     raise TypeError(f"{kind} '{name}' must be a pandas DataFrame")
-                # If schema_or_type is a class, instantiate it
                 schema_instance = schema_or_type() if isinstance(schema_or_type, type) else schema_or_type
                 schema_instance.validate(value)
             elif isinstance(schema_or_type, type):
@@ -60,15 +46,15 @@ def pdfunction(
                 raise TypeError(f"{kind} schema for '{name}' must be a Schema or type")
 
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Validate input arguments
+            bound = func_signature.bind(*args, **kwargs)
+            bound.apply_defaults()
             for arg_name, schema_or_type in arguments.items():
-                if arg_name in kwargs:
-                    _validate_schema_or_type(arg_name, kwargs[arg_name], schema_or_type, is_output=False)
+                if arg_name not in bound.arguments:
+                    raise TypeError(f"Missing required argument: {arg_name}")
+                _validate_schema_or_type(arg_name, bound.arguments[arg_name], schema_or_type, is_output=False)
 
-            # Call the function
             result = func(*args, **kwargs)
 
-            # Validate outputs if result is a dictionary
             if isinstance(result, dict):
                 for output_name, output_schema in outputs.items():
                     if output_name not in result:

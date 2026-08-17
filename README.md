@@ -68,7 +68,7 @@ MySchema().validate(df)
 
 ## Function Validation
 
-Use the `@pdfunction` decorator to validate function inputs and outputs:
+Use the `@pdfunction` decorator to validate function inputs and outputs. Every name in `arguments` is checked for both positional and keyword calls. Declared `outputs` must be returned as a dict of DataFrames (or other declared types).
 
 ```python
 from pdschema import pdfunction
