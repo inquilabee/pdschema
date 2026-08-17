@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.2.1
+
+- GitHub Pages user guide with MkDocs Material and custom styling.
+- Project URLs point at the live docs, not the git clone.
+- README expanded with feature overview.
+
 ## v0.2.0
 
 - Export `PdSchemaError`, `SchemaValidationError`, `TypeCheckError`, and `FunctionSchemaError`.

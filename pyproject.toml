@@ -1,6 +1,6 @@
 [project]
 name = "pdschema"
-version = "0.2.0"
+version = "0.2.1"
 description = "A Python library for validating pandas DataFrames using schemas"
 readme = "README.md"
 license = { text = "MIT" }
