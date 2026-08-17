@@ -104,3 +104,10 @@ build/
 
 # Powerhouse audit and planning
 .powerhouse/
+
+# ShipGate managed runtime (policy, configs, catalog, allowlists stay tracked)
+.shipgate/tools/
+.shipgate/cache/
+.shipgate/reports/
+.shipgate/server/
+.shipgate/worktrees/
