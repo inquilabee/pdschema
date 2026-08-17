@@ -1,11 +1,12 @@
 from collections.abc import Callable
 from copy import deepcopy
+from typing import Self
 
 import pandas as pd
 import pyarrow as pa
 
 from pdschema.types import TYPE_MAPPINGS, infer_pyarrow_type_from_series
-from pdschema.validators import Validator
+from pdschema.validators import CallableValidator, Validator
 
 UNSUPPORTED_DTYPE = "Unsupported dtype"
 
@@ -18,23 +19,37 @@ class Column:
         nullable: bool = True,
         validators: list[Validator | type[Validator] | Callable] | None = None,
     ):
-        self.name = name  # Name can be set later if not provided
+        self.name = name
         self.dtype = dtype
         self.nullable = nullable
-        self.validators = validators or []
+        self.validators = self._normalize_validators(validators or [])
 
-    def set_name(self, name: str):
-        """Set the name of the column dynamically."""
+    @staticmethod
+    def _normalize_validators(
+        validators: list[Validator | type[Validator] | Callable],
+    ) -> list[Validator]:
+        resolved: list[Validator] = []
+        for validator in validators:
+            if isinstance(validator, Validator):
+                resolved.append(validator)
+            elif isinstance(validator, type) and issubclass(validator, Validator):
+                resolved.append(validator())
+            elif callable(validator):
+                resolved.append(CallableValidator(validator))
+            else:
+                raise TypeError(f"Unsupported validator: {validator!r}")
+        return resolved
+
+    def set_name(self, name: str) -> None:
         self.name = name
 
-    def with_name(self, name: str):
+    def with_name(self, name: str) -> Self:
         return self.__class__(name, self.dtype, self.nullable, deepcopy(self.validators))
 
-    def to_pyarrow_type(self):
+    def to_pyarrow_type(self) -> pa.DataType:
         for mapping in TYPE_MAPPINGS:
             if self.dtype in mapping:
                 return mapping[self.dtype]
-
         raise TypeError(f"{UNSUPPORTED_DTYPE}: {self.dtype}")
 
     def infer_pyarrow_type(self, values: pd.Series) -> pa.DataType:
@@ -68,17 +83,12 @@ class Column:
 
             for validator in self.validators:
                 try:
-                    # Check if the validator is callable and apply it directly
-                    if not isinstance(validator, Validator):
-                        validator_instance = validator()
-                    else:
-                        validator_instance = validator
-
-                    if not validator_instance.validate(val):
-                        errors.append(f"Validation failed in '{self.name}' at index {i}: {val}")
-                        break
-                except Exception as e:
-                    errors.append(f"Validator error in '{self.name}' at index {i}: {e}")
+                    if not validator.validate(val):
+                        errors.append(
+                            f"Validation failed in '{self.name}' at index {i}: {val} ({validator})"
+                        )
+                except Exception as exc:
+                    errors.append(f"Validator error in '{self.name}' at index {i}: {exc}")
         return errors
 
     def check_missing(self, df: pd.DataFrame) -> str | None:
