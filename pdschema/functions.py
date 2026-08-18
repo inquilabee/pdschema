@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from functools import wraps
 from inspect import signature
-from typing import ParamSpec, TypeVar, cast
+from typing import ParamSpec, TypeVar
 
 import pandas as pd
 
@@ -43,13 +43,13 @@ def pdfunction(
                     raise FunctionSchemaError(f"{kind} '{name}' must be a pandas DataFrame")
                 schema_instance = schema_or_type() if isinstance(schema_or_type, type) else schema_or_type
                 schema_instance.validate(value)
-            elif isinstance(schema_or_type, type):
-                if schema_or_type is int and isinstance(value, bool):
-                    raise FunctionSchemaError(f"{kind} '{name}' must be of type {schema_or_type}")
-                if not isinstance(value, schema_or_type):
-                    raise FunctionSchemaError(f"{kind} '{name}' must be of type {schema_or_type}")
-            else:
+                return
+            if not isinstance(schema_or_type, type):
                 raise FunctionSchemaError(f"{kind} schema for '{name}' must be a Schema or type")
+            if schema_or_type is int and isinstance(value, bool):
+                raise FunctionSchemaError(f"{kind} '{name}' must be of type {schema_or_type}")
+            if not isinstance(value, schema_or_type):
+                raise FunctionSchemaError(f"{kind} '{name}' must be of type {schema_or_type}")
 
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -67,7 +67,7 @@ def pdfunction(
             if outputs:
                 if not isinstance(result, dict):
                     raise FunctionSchemaError("Declared outputs require a dict return value")
-                payload = cast(dict[str, object], result)
+                payload = result
                 for output_name, output_schema in outputs.items():
                     if output_name not in payload:
                         raise FunctionSchemaError(f"Missing output: {output_name}")

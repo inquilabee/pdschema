@@ -19,9 +19,7 @@ class IsValidEmail(Validator):
         self.email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
     def validate(self, value: object) -> bool:
-        if not isinstance(value, str):
-            return False
-        return bool(self.email_pattern.match(value))
+        return False if not isinstance(value, str) else self.email_pattern.match(value) is not None
 
     def __str__(self) -> str:
         return "must be a valid email address (e.g., user@domain.com)"
@@ -36,9 +34,7 @@ class IsValidPhoneNumber(Validator):
         self.pattern = re.compile("^" + "".join(r"\d" if ch == "X" else re.escape(ch) for ch in format) + "$")
 
     def validate(self, value: object) -> bool:
-        if not isinstance(value, str):
-            return False
-        return bool(self.pattern.match(value))
+        return False if not isinstance(value, str) else self.pattern.match(value) is not None
 
     def __str__(self) -> str:
         return f"must be a valid phone number in format {self.format}"
@@ -58,9 +54,7 @@ class IsStrongPassword(Validator):
         }
 
     def validate(self, value: object) -> bool:
-        if not isinstance(value, str):
-            return False
-        return all(check(value) for check in self.patterns.values())
+        return False if not isinstance(value, str) else all(check(value) for check in self.patterns.values())
 
     def __str__(self) -> str:
         return (
@@ -94,7 +88,7 @@ def custom_validators_example():
         schema.validate(df)
     except ValueError as e:
         print("Validation failed as expected:")
-        print(str(e))
+        print(e)
         print("\nDetailed validation requirements:")
         for col in schema.columns.values():
             for validator in col.validators:

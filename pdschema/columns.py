@@ -36,10 +36,10 @@ class Column:
                 resolved.append(validator)
             elif isinstance(validator, type) and issubclass(validator, Validator):
                 resolved.append(validator())
-            elif callable(validator):
-                resolved.append(CallableValidator(validator))
-            else:
+            elif not callable(validator):
                 raise TypeError(f"Unsupported validator: {validator!r}")
+            else:
+                resolved.append(CallableValidator(validator))
         return resolved
 
     def set_name(self, name: str) -> None:
@@ -55,11 +55,9 @@ class Column:
         pyarrow_dtype = getattr(dtype, "pyarrow_dtype", None)
         if pyarrow_dtype is not None:
             return pyarrow_dtype
-        if isinstance(dtype, str) and dtype in TypeRegistry.PANDAS_TO_PA:
-            return TypeRegistry.PANDAS_TO_PA[dtype]
-        name = str(dtype)
-        if name in TypeRegistry.PANDAS_TO_PA:
-            return TypeRegistry.PANDAS_TO_PA[name]
+        for candidate in (dtype, str(dtype)):
+            if candidate in TypeRegistry.PANDAS_TO_PA:
+                return TypeRegistry.PANDAS_TO_PA[candidate]
         for mapping in TYPE_MAPPINGS:
             if dtype in mapping:
                 return mapping[dtype]
@@ -96,11 +94,7 @@ class Column:
 
         vec_vals, scalar_vals = self._split_validators(non_null)
         errors: list[str] = []
-
-        if vec_vals:
-            scalar_check_indices = self._validate_vectorized(non_null, vec_vals, errors)
-        else:
-            scalar_check_indices = non_null.index
+        scalar_check_indices = self._validate_vectorized(non_null, vec_vals, errors) if vec_vals else non_null.index
 
         if scalar_vals and self.name is not None:
             self._validate_scalar(self.name, non_null, scalar_check_indices, scalar_vals, errors)

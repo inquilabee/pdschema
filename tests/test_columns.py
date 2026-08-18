@@ -13,7 +13,7 @@ def test_column_initialization():
     assert col.name == "age"
     assert col.dtype == int
     assert col.nullable is True
-    assert col.validators == []
+    assert not col.validators
 
     # Test with validators
     col = Column("age", int, nullable=False, validators=[IsPositive])

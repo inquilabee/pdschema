@@ -50,7 +50,7 @@ def test_empty_list_overrides_declared_columns():
         id = Column(dtype=int, nullable=False)
 
     assert list(Decl().columns) == ["id"]
-    assert Decl([]).columns == {}
+    assert not Decl([]).columns
 
 
 def test_declarative_schema_inherits_parent_columns():

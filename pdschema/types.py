@@ -1,7 +1,7 @@
 from collections.abc import Callable, Mapping
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import numpy as np
 import pandas as pd
@@ -79,7 +79,7 @@ class TypeRegistry:
 
     TYPE_MAPPINGS: ClassVar[list[Mapping[object, pa.DataType]]] = [
         PYARROW_PANDAS,
-        cast(Mapping[object, pa.DataType], PYTHON_TO_PA),
+        PYTHON_TO_PA,
     ]
 
     PANDAS_TYPE_PREDICATES: ClassVar[list[tuple[Callable[[object], bool], pa.DataType]]] = [
@@ -118,9 +118,7 @@ class TypeRegistry:
             return True
         if declared is int:
             return pa.types.is_signed_integer(inferred)
-        if declared is float:
-            return pa.types.is_floating(inferred)
-        return False
+        return pa.types.is_floating(inferred) if declared is float else False
 
 
 def infer_pyarrow_type_from_series(s: pd.Series) -> pa.DataType:

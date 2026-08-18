@@ -33,7 +33,7 @@ def error_handling_example():
         schema.validate(df)
     except ValueError as e:
         print("Validation failed with the following errors:")
-        print(str(e))
+        print(e)
 
 
 def multiple_errors_example():
@@ -58,7 +58,7 @@ def multiple_errors_example():
         schema.validate(df)
     except ValueError as e:
         print("\nMultiple validation errors:")
-        print(str(e))
+        print(e)
 
 
 def custom_error_handling():
@@ -76,9 +76,9 @@ def custom_error_handling():
         schema.validate(df)
     except ValueError as e:
         print("\nCustom validation errors:")
-        print(str(e))
+        print(e)
     except Exception as e:
-        print(f"\nUnexpected error: {e!s}")
+        print(f"\nUnexpected error: {e}")
 
 
 if __name__ == "__main__":

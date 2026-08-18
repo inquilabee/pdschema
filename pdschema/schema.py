@@ -16,8 +16,7 @@ class SchemaMeta(type):
             dct.pop(key)
         columns: dict[str, Column] = {}
         for base in reversed(cls._base_mro(bases)):
-            declared = getattr(base, "_declared_columns", None)
-            if declared:
+            if declared := getattr(base, "_declared_columns", None):
                 columns.update(declared)
         columns.update(own)
         dct["_declared_columns"] = columns
@@ -55,12 +54,9 @@ class Schema(metaclass=SchemaMeta):
     def __init__(self, columns: list[Column] | None = None, *, strict: bool = False):
         self.strict = strict
         if columns is None:
-            if not self._declared_columns:
-                self.columns = {}
-            else:
-                self.columns = {
-                    col_name: col_obj.with_name(col_name) for col_name, col_obj in self._declared_columns.items()
-                }
+            self.columns = {} if not self._declared_columns else {
+                col_name: col_obj.with_name(col_name) for col_name, col_obj in self._declared_columns.items()
+            }
             return
         named: dict[str, Column] = {}
         for col in columns:
@@ -80,16 +76,14 @@ class Schema(metaclass=SchemaMeta):
         return "\n".join(lines)
 
     def validate(self, df: pd.DataFrame) -> bool:
-        errors = self._collect_errors(df)
-        if errors:
+        if errors := self._collect_errors(df):
             raise SchemaValidationError("Schema validation failed:\n" + "\n".join(errors))
         return True
 
     def _collect_errors(self, df: pd.DataFrame) -> list[str]:
         errors: list[str] = []
         if self.strict:
-            extra = [name for name in df.columns if name not in self.columns]
-            if extra:
+            if extra := [name for name in df.columns if name not in self.columns]:
                 errors.append(f"Unexpected columns: {extra}")
         for col_name, col in self.columns.items():
             errors.extend(self._column_errors(df, col_name, col))
@@ -128,8 +122,8 @@ class Schema(metaclass=SchemaMeta):
             if check(series):
                 return inferred_type
 
-        sample = None if series.empty else series.dropna().iloc[0]
-        return type(sample) if sample is not None else object
+        samples = series.dropna()
+        return object if samples.empty else type(samples.iloc[0])
 
     @classmethod
     def infer_schema(cls, df: pd.DataFrame) -> "Schema":
@@ -137,7 +131,7 @@ class Schema(metaclass=SchemaMeta):
             Column(
                 name=col_name,
                 dtype=cls._infer_column_type(df[col_name]),
-                nullable=bool(df[col_name].isnull().any()),
+                nullable=df[col_name].isnull().any(),
             )
             for col_name in df.columns
         ]

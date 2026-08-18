@@ -122,7 +122,7 @@ def ecommerce_data_validation():
         schema.validate(df)
     except ValueError as e:
         print("E-commerce data validation failed:")
-        print(str(e))
+        print(e)
         print("\nValidation requirements:")
         for col in schema.columns.values():
             for validator in col.validators:
@@ -158,7 +158,7 @@ def inventory_data_validation():
         schema.validate(df)
     except ValueError as e:
         print("\nInventory data validation failed:")
-        print(str(e))
+        print(e)
         print("\nValidation requirements:")
         for col in schema.columns.values():
             for validator in col.validators:

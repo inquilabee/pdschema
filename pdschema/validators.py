@@ -15,7 +15,7 @@ def compare(op: str, left: object, right: object) -> bool:
         except TypeError:
             continue
         if result is not NotImplemented:
-            return bool(result)
+            return result
     return False
 
 
@@ -39,7 +39,7 @@ class CallableValidator(Validator):
         self.fn = fn
 
     def validate(self, value: object) -> bool:
-        return bool(self.fn(value))
+        return self.fn(value)
 
     def __str__(self) -> str:
         return getattr(self.fn, "__name__", type(self.fn).__name__)
@@ -55,7 +55,7 @@ class IsPositive(Validator):
 
 class IsNonEmptyString(Validator):
     def validate(self, value: object) -> bool:
-        return isinstance(value, str) and len(value.strip()) > 0
+        return isinstance(value, str) and value.strip()
 
     def validate_vector(self, series: pd.Series) -> pd.Series:
         return series.astype(str).str.strip().str.len() > 0
@@ -68,11 +68,9 @@ class BoundComparison(Validator):
         self.upper = upper
 
     def validate(self, value: object) -> bool:
-        if self.upper:
-            op = "__lt__" if self.exclusive else "__le__"
-        else:
-            op = "__gt__" if self.exclusive else "__ge__"
-        return compare(op, value, self.threshold)
+        if not self.upper:
+            return compare("__gt__" if self.exclusive else "__ge__", value, self.threshold)
+        return compare("__lt__" if self.exclusive else "__le__", value, self.threshold)
 
     def validate_vector(self, series: pd.Series) -> pd.Series:
         if self.upper:
@@ -140,9 +138,7 @@ class Length(Validator):
         length = len(value)
         if self.min_length is not None and length < self.min_length:
             return False
-        if self.max_length is not None and length > self.max_length:
-            return False
-        return True
+        return self.max_length is None or length <= self.max_length
 
     def validate_vector(self, series: pd.Series) -> pd.Series:
         lengths = series.str.len()

@@ -21,7 +21,7 @@ def test_pdfunction_basic():
     )
     def multiply_values(df, multiplier):
         result = df.copy()
-        result["value"] = result["value"] * multiplier
+        result["value"] *= multiplier
         return {"result": result}
 
     # Valid input

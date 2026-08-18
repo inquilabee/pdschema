@@ -17,7 +17,7 @@ def test_pdfunction_with_declarative_schema():
     )
     def process_data(df):
         result = df.copy()
-        result["value"] = result["value"] * 2
+        result["value"] *= 2
         return {"result": result}
 
     # Valid input
